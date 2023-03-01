@@ -1,15 +1,15 @@
 
-#Evolutionary Algorithms Framework
+# Evolutionary Algorithms Framework
  This project provides a generic framework for implementing and testing different evolutionary algorithms (EAs) for solving optimization problems. Evolutionary algorithms are a family of stochastic optimization methods that draw inspiration from biological evolution to generate candidate solutions and refine them over time.
 
  This framework includes an abstract class for a generic EA, called EvolutionaryAlgorithm, which defines the common methods and attributes that all EAs should implement. Additionally, a generic test class, called Test, is provided, which implements the evaluation loop for the EvolutionaryAlgorithm class and its child classes.
 
  The implementation of this framework is based on the concepts and techniques presented in the book "Fundamentos de la Computación Evolutiva" by Carmona and Galán, which covers the fundamentals of evolutionary computation, including genetic algorithms, evolutionary strategies, and genetic programming.
 
-#Requirements
+# Requirements
  This project requires Python 3.7 or later and the NumPy library.
 
-#Getting Started
+# Getting Started
  To use this framework, you can start by creating a child class of the EvolutionaryAlgorithm class, which should implement the specific behavior of the EA for solving a particular optimization problem. Then, you can use the Test class to evaluate the performance of your EA implementation on different problem instances.
 
 To create a child class of EvolutionaryAlgorithm, you should implement at least the following methods:
