@@ -1,5 +1,4 @@
 import numpy as np
-from ypstruct import structure
 import random
 from multiprocessing import Pool
 from functools import partial
@@ -46,9 +45,9 @@ class Evolution_Strategy(Evolutive_algorithm):
             crossover_type: String that determines the type of crossover 
                 operator. Can be "discrete" or "intermediate"
             tau(float): Hyperparameter that determines the step for the 
-                mutation of the strategy parameters s.It is the standard 
-                deviation of the log-normal distribution that generates a 
-                perturbation of each of the strategy parameters independently.
+                        mutation of the strategy parameters s.It is the standard 
+                        deviation of the log-normal distribution that generates a 
+                        perturbation of each of the strategy parameters independently.
             tau_prime(float): Hyperparameter that determines the step for 
                 the mutation of the strategy parameters. It is the standard 
                 deviation of the log-normal distribution that generates the 
