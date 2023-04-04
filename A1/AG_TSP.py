@@ -1,5 +1,17 @@
 import numpy as np
 import random
+import sys,os
+# getting the name of the directory
+# where the this file is present.
+current = os.path.dirname(os.path.realpath(__file__))
+ 
+# Getting the parent directory name
+# where the current directory is present.
+parent = os.path.dirname(current)
+ 
+# adding the parent directory to
+# the sys.path.
+sys.path.append(parent)
 from EA import Evolutive_algorithm
 
 class Traveling_salesman_GA(Evolutive_algorithm):
@@ -9,7 +21,7 @@ class Traveling_salesman_GA(Evolutive_algorithm):
     """
 
     def __init__(self, params, cities):
-        """Initialize the algorithm with the given parameters and cities."""
+        """Initialize the algorithm withthe given parameters and cities."""
         super().__init__()
         
         self.npop = params["npop"]

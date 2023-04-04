@@ -1,7 +1,7 @@
 import numpy as np
 
 
-class Evolutive_algoritm:
+class Evolutive_algorithm:
     """Abstract class that implements the methods of a generic evolutionary
     algorithm and serves as a parent for other algorithms."""
 
