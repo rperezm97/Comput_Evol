@@ -2,24 +2,20 @@ import numpy as np
 import random
 import json
 import sys,os
-# getting the name of the directory
-# where the this file is present.
+# We need to import modules from the current
+# and parent directories.
 current = os.path.dirname(os.path.realpath(__file__))
- 
-# Getting the parent directory name
-# where the current directory is present.
 parent = os.path.dirname(current)
- 
-# adding the parent directory to
-# the sys.path.
+sys.path.append(current)
 sys.path.append(parent)
+
 from EA import Evolutive_algorithm
+from aux import *
 
-
-class Traveling_salesman_GA(Evolutive_algorithm):
+class GA_TSP(Evolutive_algorithm):
     """
-    Child class implementing a genetic algorithm for the Traveling
-    Salesman Problem.
+    Child class implementing a genetic algorithm (GA) for the Traveling
+    Salesman Problem (TSP).
     """
 
     def __init__(self, params_file, instance_file, known_optimal=None):
@@ -114,35 +110,6 @@ class Traveling_salesman_GA(Evolutive_algorithm):
         """
         self.parameters[key] = value
         self.save_params()
-
-    ### AUXILIARY METHODS
-    def calculate_city_distances(self, cities):
-        """
-        Calculate a matrix with the pairwise distances between the cities.
-        """
-        ncities = len(cities)
-        city_distances = np.empty((ncities, ncities))
-
-        # Set 0s to diagonal elements
-        city_distances[tuple((range(ncities), range(ncities)))] = 0
-
-        # Calculate the indices of the lower triangular matrix:
-        # pairs of city indices (i1, i2) where i1 < i2
-        tri_idx = np.tril_indices(n=ncities, k=-1)
-
-        # Create an array of tuples with the pairs of cities
-        pairs = cities[np.array(tri_idx)]
-
-        # Calculate the pairwise distances
-        d = np.sqrt(np.sum((pairs[0]-pairs[1])**2, axis=-1))
-
-        # Assign the distances to the lower and upper triangular parts of the matrix
-        city_distances[tri_idx] = d
-        permut_idx = np.roll(np.array(tri_idx), 1, axis=0)
-        city_distances[tuple(permut_idx)] = d
-
-        return city_distances
-    
     
     ### GENETIC ALGORITHM METHODS ###
     def init_pop(self):
@@ -154,7 +121,8 @@ class Traveling_salesman_GA(Evolutive_algorithm):
 
     def f_adapt(self, x):
         """
-        Calculate the adaptation of the population based on the total distance of the routes.
+        Calculate the adaptation of the population based on the total distance 
+        of the routes.
         """
         routes = np.vstack((np.append([0], x), np.append(x, [0])))
         L = self.city_distances[tuple(routes)]
@@ -219,19 +187,8 @@ class Traveling_salesman_GA(Evolutive_algorithm):
 
         return c1, c2
 
-    def find_new_pos(self, p, c):
-        """Find the positions of the missing genes and add them to the child."""
-        free = np.where(c == 0)[0]
-        rest_id = np.where((1-np.in1d(p, c)))
-        for i in p[rest_id]:
-            pos = np.where(p == i)[0][0]
-            while pos not in free:
-                k = c[pos]
-                pos = np.where(p == k)[0][0]
-            c[free[0]] = i
-            free = free[1:]
-        return c
-
+    
+    ### AUXILIARY METHODS
     def evolve(self):
         """
         Evolve the population for ngen generations and return the best individual
@@ -252,6 +209,11 @@ class Traveling_salesman_GA(Evolutive_algorithm):
             if self.pop_fit[best_gen_idx] < best_fit:
                 best = self.pop[best_gen_idx]
                 best_fit = self.pop_fit[best_gen_idx]
-                print(f"New best individual in generation {i+1}: {best}, with fitness {best_fit}.")
+                print(f"New best individual in generation {i+1}: {best}, \
+                      with fitness {best_fit}.")
         return best, best_fit
 
+    
+    
+
+    
