@@ -130,8 +130,8 @@ class Genetic_Algorithm_TSP(Evolutive_algorithm):
         end = max(a, b)
 
         # Create two empty children
-        c1 = np.zeros(n, dtype=int)
-        c2 = np.zeros(n, dtype=int)
+        c1 = np.zeros(n, dtype=float)
+        c2 = np.zeros(n, dtype=float)
 
         # Copy the segment from parent 1 to child 1
         c1[start:end+1] = p1[start:end+1]
@@ -144,7 +144,7 @@ class Genetic_Algorithm_TSP(Evolutive_algorithm):
         notc2 = p2-c2
 
         # Add the missing genes to child 1 and child 2
-        notc1_in_notc2 = np.in1d(notc2, notc1)
+        notc1_in_notc2 = np.in1d(notc2, notc1).astype(float)
         c1+= notc2*notc1_in_notc2
         notc2_in_notc1 = np.in1d(notc1, notc2)
         c2 += notc1*notc2_in_notc1
@@ -193,5 +193,5 @@ class Genetic_Algorithm_TSP(Evolutive_algorithm):
         return self.pop
 
 if __name__=="__main__":
-    a=Genetic_Algorithm_TSP(name="Test", instance_file="/root/PYTHON/Comput_Evol/A1/instances/simple.tsp")
+    a=Genetic_Algorithm_TSP(name="Test", instance_file="/root/PYTHON/Comput_Evol/A1/instances/complex.tsp")
     a.run()

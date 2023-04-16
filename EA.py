@@ -3,6 +3,7 @@ from abc import ABC
 import time
 import matplotlib.pyplot as plt
 
+import os
 
 class Evolutive_algorithm(ABC):
     """Abstract class that implements the methods of a generic evolutionary
@@ -16,7 +17,8 @@ class Evolutive_algorithm(ABC):
         self.pop_fit = self.f_adapt(self.pop)
         self.best_adapt = np.min(self.pop_fit)
         self.best = np.argmin(self.pop_fit)
-
+        self.optimal=None
+        self.parameters= None
     def init_pop(self):
         """Initialize the population. To be implemented by child classes."""
         pass
@@ -76,7 +78,7 @@ class Evolutive_algorithm(ABC):
         self.best_adapt = np.min(self.pop_fit)
         self.best = np.argmin(self.pop_fit)
 
-    def run(self, ngen=100):
+    def run(self, ngen=10000):
         """
         Runs the evolutionary algorithm for ngen generations.
 
@@ -105,9 +107,17 @@ class Evolutive_algorithm(ABC):
         gen_success = 0
         
         #Initialize log
-        log=open("./logs/{}.txt".format( self.name), "w")
+        log_folder = './logs/'
+        if not os.path.exists(log_folder):
+            os.makedirs(log_folder)
+        log=open("logs/{}.txt".format( self.name), "w")
         
-        
+        # Print inicial
+        start_msg="{}\n".format(self.name) 
+        start_msg+="\nPARAMETERS={}".format(self.parameters)
+        start_msg+="Iniciating...\n\n"    
+        print(start_msg)
+        log.write(start_msg)
         
         for it in range(ngen):
             # Update the progress counter
@@ -154,7 +164,8 @@ class Evolutive_algorithm(ABC):
             # and the standard deviations hasn't changed (thus, the algorithm
             # has exploited that solution and the best individual has taken
             # over most of the population). 
-            if abs(bests[it]-bests[it-100]) < 0.01 \
+            if it>0  \
+               and abs(bests[it]-bests[it-1000]) < 0.01 \
                and (SDs[t]-SDs[t-1]) < 0:
 
                 gen_success = it
@@ -163,22 +174,21 @@ class Evolutive_algorithm(ABC):
                 t_conver = t2 - t1
 
                 # Print the final results
-                success_msg = "{}: Convergence in {:.2f} seconds, after \
+                success_msg = "{}: Convergence reached in {:.2f} seconds, after\
                             {} generations.\n".format(self.name, t_conver, ngen)
-                success_msg += "Best individual found: \
-                            {}".format(self.pop[self.best])
+    
                 success_msg += "Fitness of the best individual: \
-                            {}".format(self.best_adapt)
+                            {},{}".format(self.best_adapt,bests[it])
                 print(success_msg, flush=True)
                 log.write(success_msg + "\n")
+                break
         # When the loop finishes, check if the convergence has not been reached
         if not gen_success:
-            t_conver = 0
+            t2 = time.time()
+            t_conver = t2 - t1
             # Print the final results
-            success_msg = "{}: Evolution completed without convergence in \
-                            {} generations.\n".format(self.name, ngen)
-            success_msg += "Best individual found: \
-                            {}".format(self.pop[self.best])
+            success_msg = "{}: Convergence not reached in {:.2f} seconds, after\
+                           {} generations.\n".format(self.name, t_conver, ngen)
             success_msg += "Fitness of the best individual: \
                             {}".format(self.best_adapt)
             print(success_msg, flush=True)
@@ -188,7 +198,7 @@ class Evolutive_algorithm(ABC):
         
         # Plot the progress graph
 
-        self.plot_converg(gen_success, bests, means, SDs)
+        self.plot_convergence(ngen, gen_success, bests, means, SDs)
 
         # Todo: save best individual in a file
 
@@ -235,7 +245,8 @@ class Evolutive_algorithm(ABC):
         # The value of the best individual and the known optimal value
         plt.plot(x, bests[:ngen], "--", linewidth=0.8,
                 color="blue", label='Best')
-        plt.plot(x, self.optimal*np.ones(ngen), label="Optimal", color="green")
+        if self.optimal:
+            plt.plot(x, self.optimal*np.ones(ngen), label="Optimal", color="green")
         # The convergence generation on the best individual curve
         plt.scatter(gen_success, bests[gen_success],
                     color="red", label='Convergence', zorder=1)
@@ -247,8 +258,7 @@ class Evolutive_algorithm(ABC):
         plt.xlabel('Generations')
         plt.ylabel('Adaptation value')
 
-        plt.title('AG {} Instance={}, - Exe {}'.format(self.name,
-                                                    self.instance))
+        plt.title('AG {} '.format(self.name))
+        #plt.show()
         # Save the figure in the plots folder and show it
-        #plt.savefig(
-        #   './plots/{}/{}.png'.format(self.instance, self.name))
+        plt.savefig('plots/{}.png'.format(self.name))

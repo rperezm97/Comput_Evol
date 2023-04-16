@@ -9,7 +9,48 @@ import numpy as np
 import matplotlib.pyplot as plt
 from tests import Test
 
+def run(self):
+        print("\n Inicando ejecuciones en paralelo...")
+        t1=time.time()
+        start=int(self.initial) 
+        pool = Pool(processes=cpu_count())
+        #Si se ha hecho la primera evalaución incial, entonces ya tenemos el 
+        #valor de la ejecución 0, en cuyo caso nos quedan n_exe-1 ejecuciones
+        r = pool.map_async(self.execute, 
+                           range(start,self.n_exe)
+                           ).get()
+        gen_exito, bests, best_route,t_conver=zip(*r)
+        t2=time.time()
+        self.T_exe=t2-t1
+        print(" Ejecuciones en paralelo finalizadas, T_exe={}".format(self.T_exe))
+        #Usa r.get() para obtener los valores de las ejecuciones en paralelo,
+        #y convierte el resultado a un array para poder hacer unpacking en 
+        #los arrays corresponientes. 
+        
+        self.gen_exito[start:]=gen_exito
+        self.sampleVAMM[start:]=bests
+        self.best_routes[start:]=best_route
+        self.T_conver[start:]=t_conver
+        self.VAMM = np.sum(self.sampleVAMM, axis=0)/self.n_exe
+        print("\nVAMM:{}%".format(self.VAMM[-1]))
+        ngen=self.VAMM.shape[0]
+        idx=[i for i in range(ngen) if not i % (ngen//50)]
 
+        s_n = np.sqrt(np.sum((self.sampleVAMM[:,idx]-
+                              self.VAMM[idx]
+                              )**2
+                             ,axis=0
+                             )/(self.n_exe-1))
+        #ME al 95%
+        self.ME = 2*s_n/np.sqrt(self.n_exe)
+        
+        
+        exitos=np.sum(self.gen_exito!=0)
+        self.TE=np.sum(exitos)/self.n_exe
+        print("\nPorcentaje de éxito:{}%".format(100*self.TE))
+        if exitos:
+            self.TM=np.sum(self.T_conver)/exitos
+            print("\nTiempo medio :{}s".format(self.TM))
 
 
 def main():
