@@ -287,57 +287,7 @@ class EA_run:
                 best_route=0
         return gen_exito, bests, best_route, t_conver
 
-def plot_converg(self, i, gen_exito, bests, means, DEs,):
-        """
-        Plotea el gráfico de progreso, con el valro del mejor individuo, de la
-        media de la población y de la desviación estandard. También muestra el
-        punto donde se cumple al condición de convergencia (si no converge,
-        este punto estará en el cero)
-        """
-        # Creo el eje x desde 0 hasta ngen
-        ngen = self.params["ngen"]
-        x = np.arange(ngen)
-        # Creo al lista de indices de las 50 generaciones de referencia
-        idx = [i for i in range(ngen) if not i % (ngen//50)]
 
-        # Creo la figura
-        plt.figure(figsize=(8, 6),dpi=200)
-
-        # PLOTEO:
-        # La media
-        plt.plot(x,means, linewidth=0.3,
-                 color="orange", label='Media')
-        # Las desviacion tipica en los 50 puntos
-        plt.errorbar(x[idx],means[idx], 
-                     yerr=DEs, color='Black', 
-                     elinewidth=.6, capthick=.8, 
-                     capsize=.8, alpha=0.5, 
-                     fmt='o', markersize=.7, linewidth=.7)
-        # El valor del mejor individuo y el óptimo conocido
-        plt.plot(x, bests[:ngen], "--", linewidth=0.8,
-                 color="blue", label='Mejor')
-        plt.plot(x, self.optimal*np.ones(ngen), 
-                 label="Óptimo", color="green")
-        # La generación de convergencia sobre la curva del mejor individuo
-        plt.scatter(gen_exito, bests[gen_exito],
-                    color="red", label='Convergencia', zorder=1)
-
-        # Añado la cuadricula, la leyenda y las etiquetas
-        plt.grid(True)
-        plt.xlim(0, ngen)
-        plt.legend(loc='upper right', frameon=False, fontsize=8)
-        plt.xlabel('Generaciones')
-        plt.ylabel('Valor de adaptación')
-
-        plt.title('AG {} Instancia={}, - Exe {}'.format(
-                                                        self.name,
-                                                        self.instance,  
-                                                        i))
-        # Guardo la figura en la carpeta plots y muetsro la figura
-        plt.savefig('./plots/{}/Exe{}_{}.png'.format(
-                                                    self.instance, 
-                                                    i, 
-                                                    self.name))
 
     def addplot_VAMM(self, label):
         

@@ -195,4 +195,4 @@ class Genetic_Algorithm_TSP(Evolutive_algorithm):
 
 if __name__=="__main__":
     a=Genetic_Algorithm_TSP(instance_file="/root/PYTHON/Comput_Evol/A1/instances/simple.tsp")
-    a.reproduce()
+    a.run()
