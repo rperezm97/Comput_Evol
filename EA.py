@@ -1,7 +1,6 @@
 import numpy as np
 from abc import ABC
 import time
-import log
 import matplotlib.pyplot as plt
 
 
@@ -77,7 +76,7 @@ class Evolutive_algorithm(ABC):
         self.best_adapt = np.min(self.pop_fit)
         self.best = np.argmin(self.pop_fit)
 
-    def run(self, ngen):
+    def run(self, ngen=100):
         """
         Runs the evolutionary algorithm for ngen generations.
 
@@ -104,6 +103,12 @@ class Evolutive_algorithm(ABC):
         t = 0
         t1 = time.time()
         gen_success = 0
+        
+        #Initialize log
+        log=open("./logs/{}.txt".format( self.name), "w")
+        
+        
+        
         for it in range(ngen):
             # Update the progress counter
             progress = "Gen {}/{}".format(it, ngen)
@@ -177,7 +182,10 @@ class Evolutive_algorithm(ABC):
             success_msg += "Fitness of the best individual: \
                             {}".format(self.best_adapt)
             print(success_msg, flush=True)
-
+        
+        #Close log
+        log.close()
+        
         # Plot the progress graph
 
         self.plot_converg(gen_success, bests, means, SDs)
@@ -240,8 +248,7 @@ class Evolutive_algorithm(ABC):
         plt.ylabel('Adaptation value')
 
         plt.title('AG {} Instance={}, - Exe {}'.format(self.name,
-                                                    self.instance,
-                                                    i))
+                                                    self.instance))
         # Save the figure in the plots folder and show it
         #plt.savefig(
         #   './plots/{}/{}.png'.format(self.instance, self.name))

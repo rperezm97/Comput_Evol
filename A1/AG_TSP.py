@@ -20,7 +20,7 @@ class Genetic_Algorithm_TSP(Evolutive_algorithm):
     Salesman Problem (TSP).
     """
 
-    def __init__(self, instance_file, parameters_file=None, known_optimal=None):
+    def __init__(self, name, instance_file, parameters_file=None, known_optimal=None):
         """
         Initialize the algorithm with the given parameters and cities in the 
         corresponding files.
@@ -37,7 +37,7 @@ class Genetic_Algorithm_TSP(Evolutive_algorithm):
        
         # The instance name will be the name of the isnatcne file without the 
         # extension. 
-        self.instance_name = Path(instance_file).stem
+        
         # Load the city coordinate matrix from the instance file 
         self.cities = aux.load_instance(instance_file)
         self.n_cities = len(self.cities)
@@ -54,9 +54,8 @@ class Genetic_Algorithm_TSP(Evolutive_algorithm):
         self.n_parents=2
         self.n_children =self.n_pop
         
-        super().__init__()
-        print(self.pop.shape, self.pop_fit.shape)
-    ### GENETIC ALGORITHM METHODS ###
+        super().__init__(name) #Path(instance_file).stem
+        
     def init_pop(self):
         """
         Initialize the population matrix with random permutations of the city 
@@ -194,5 +193,5 @@ class Genetic_Algorithm_TSP(Evolutive_algorithm):
         return self.pop
 
 if __name__=="__main__":
-    a=Genetic_Algorithm_TSP(instance_file="/root/PYTHON/Comput_Evol/A1/instances/simple.tsp")
+    a=Genetic_Algorithm_TSP(name="Test", instance_file="/root/PYTHON/Comput_Evol/A1/instances/simple.tsp")
     a.run()
