@@ -4,7 +4,6 @@ import json
 import matplotlib.pyplot as plt
 import time
 from multiprocessing import Pool, cpu_count
-from pop import Population
 
 # Usamos este string para tener un contador de generaciones.
 # (Con print(end=LINE_CLEAR), se borra la ultima línea impresa en la consola).
@@ -14,8 +13,8 @@ LINE_CLEAR = '\x1b[2K'
 # %%           CLASE DE TESTS PARA EL ALGORITMO GENÉTICO                      #
 ###############################################################################
 
-class Test:
-    def __init__(self, name, instance, n_exe=30, output=False):
+class EA_run:
+    def __init__(self, EA, name, n_exe=30, output=None):
         """ 
         instance:string. Toma el valor "simple" para la instancia simple (101  
         ciudades o "complex" para la instancia compleja (100010 ciudades).
@@ -27,7 +26,7 @@ class Test:
         valores de los parámetros del algoritmo, o None para cargar los valores
         por defecto. Ver función load_params abajo.
         
-        output: Bool. Es la ubicación del archivo donde guardar 
+        output:  Es la ubicación del archivo donde guardar 
         la mejor ruta encontrada. con los valores de  
         los parámetros del algoritmo, o None para cargar los valores por 
         defecto. Ver función load_params abajo.
@@ -39,12 +38,6 @@ class Test:
         self.output=output
         
         # Carga los parámetros, las ciudades y el óptimo conocido
-        self.param_file='./params/{}/{}'.format(
-                                            self.instance, 
-                                            name)+".json"
-                                    #todo os join
-        self.params = self.load_params()
-        self.cities, self.optimal = self.load_instance()
         
         print("Inicializando población, calculando matriz de distancias...")
         self.model_population = Population(self.params, 
@@ -71,7 +64,7 @@ class Test:
 
      
 
-#%%#%%#################FUNCIONES PARA EJECUTAR EL TEST ################ #######
+#################FUNCIONES PARA EJECUTAR EL TEST ################ #######
    
     def run(self):
         print("\n Inicando ejecuciones en paralelo...")
@@ -294,7 +287,7 @@ class Test:
                 best_route=0
         return gen_exito, bests, best_route, t_conver
 
-    def plot_converg(self, i, gen_exito, bests, means, DEs,):
+def plot_converg(self, i, gen_exito, bests, means, DEs,):
         """
         Plotea el gráfico de progreso, con el valro del mejor individuo, de la
         media de la población y de la desviación estandard. También muestra el
@@ -368,200 +361,8 @@ class Test:
         
         #plt.show()
         
-    # ##### FUNCIONES AUXILIARES #####:
-   
-    # ##### FUNCIONES PRINCIPALES #####:
-
-    # def execute(self, gen_conver=None):
-    #     """
-    #     Plotea el gráfico de progreso, con el valro del mejor individuo, de la media 
-    #     de la población y de la desviación estandard. También muestra el punto donde 
-    #     se cumple al condición de convergencia (si no ah convergido, este punto estará en
-    #     el cero)
-    #     """
-        
-        
-    #     # Guardamos el tiempo inicial para medir el tiempo de ejecución.
-    #     t1 = time.time()
-
-    #     ##### INICIALIZACIÓN DE PARAMETROS #####
-    #     # Crea un diccionario de poblaciones de tamaño n_exe,
-    #     # cuyos valores de adaptación constituyen la muestra aleatoria
-    #     # con la que evaluaremos el algoritmo
-    #     print("Inicializando muestra...")
-    #     self.sample = {i: Population(self.params, self.cities, self.city_distances)
-    #                    for i in range(self.n_exe)}
-    #     self.exito=np.zeros(self.n_exe, dtype=bool)
-    #     self.T_conver=np.zeros(self.n_exe, dtype=bool)
-    #     if gen_conver:            
-    #         ngen=gen_conver
-    #     else:
-    #         ngen=self.params["ngen"]
-    #     # npop=self.params["npop"]
-    #     self.VAMM = np.zeros(ngen)
-    #     # self.gen_mean=np.zeros(ngen)
-    #     self.ME = np.zeros(50)
-    #     # Inicializamos una suma cumulativa de medias, que nos permitirá calcular
-    #     # la desviación estandar de las medias de forma más eficiente que con np.std()
-
-    #     prev_best= np.zeros((self.n_exe,100))
-    #     t=0
-    #     # # Sobreescribimos el log anterior con el mismo nombre. Si no existe lo crea.
-    #     with  open(".\logs\log_execution_{}_pc{}.txt".format(
-    #             self.instance, self.params["pc"]), "w") as log:
-           
-    #         # Print inicial
-              
-    #         print("EVALUACIÓN DE ALGORITMO GENÉTICO \n",
-    #               "INSTANCIA={} ,EJECUCIONES={}\nPARAMETROS={} \nIniciando...\n\n ".format(
-    #                   self.instance, self.n_exe, self.params))
-    #         print("EVALUACIÓN DE ALGORITMO GENÉTICO \n",
-    #               "INSTANCIA={} ,EJECUCIONES={}\nPARAMETROS={} \nIniciando...\n\n ".format(
-    #                   self.instance, self.n_exe, self.params), file=log)
-    
-    #         ######### BUCLE PRINCIPAL #########
-
-    #         for it in range(ngen):
-               
-    #             VAMM = np.sum(best)/self.n_exe
-    #             self.VAMM[it] = VAMM
-    #             #Actualiza el contador
-    #             print(end=LINE_CLEAR)
-                
-    #             # Calculamos la media y la añadimos al array correspondiente
-    #             # mean=[np.sum(self.sample[i].adapts)/npop for i in range(self.n_exe)]
-    #             # self.gen_mean[it] = np.sum(mean)/self.n_exe
-    #             if not it % (ngen//50):
-    #                 s_n = np.sqrt(np.sum((best-VAMM)**2)/(self.n_exe-1))
-    #                 # ME al 95%
-    #                 self.ME[t] = 2*s_n/np.sqrt(self.n_exe)
-    
-                   
-    #                 # Muestra el progreso
-    #                 print("Generación {}: \n VAMM={} ME = {} \n ".format(
-    #                       it, self.VAMM[it], self.ME[t]))
-                
-    #                 print("Generación {}: \n VAMM={} ME = {} \n ".format(
-    #                       it, self.VAMM[it], self.ME[t]),
-    #                        file=log)
-    #                 t+=1
-    #             for i in range(self.n_exe):
-    #                 #Condición de convergencia
-                    
-    #                 if(
-    #                    not self.exito[i] # si no se ha llegado a convergencia aun gen_converg=0
-    #                    and abs(self.sample[i].bestadapt-prev_best[i,it%100]) < 0.01
-    #                 ):
-    #                        self.exito[i]=True
-    #                        t2 = time.time()
-    #                        self.T_conver[i]=t2-t1
-    #                        print("-------CONVERGENCIA EJECUCIÓN {} (GENERACIÓN {})------".format(
-    #                                                                                        i, it))
-    #                        print("-------CONVERGENCIA EJECUCIÓN {} (GENERACIÓN {})------".format(
-    #                                                                                        i, it),
-    #                              file=log)     
-                    
-    #             prev_best[:,it%100]=[self.sample[i].bestadapt for i in range(self.n_exe)]
-    #         #FIN DEL BUCLE.    
-    #         # Ahora, mide el tiempo, guarda la generación de
-    #         # convergencia y plotea la grafica de progreso
-    #         t2 = time.time()
-    #         print("\nTiempo={}s".format(t2-t1))
-    #         print("\nTiempo={}s".format(t2-t1), file=log)
-            
-                            
-            
-    #         print("\nMEJOR RUTA (COSTE={}):\n{}".format(
-    #                                 best_pop.bestadapt,
-    #                                 best_pop.pop[best_pop.best]),
-    #                                 file=log)
-    #         self.plot_generations()
-    #         return TE, self.VAMM, self.ME, TM
-     
-       
 
 
-        
-        
-        
-        #%%############### FUNCIONES PARA CARGAR LOS PARÁMETROS Y CIUDADES #######################
-
-
-
-    def load_params(self):
-        """Carga los parámetros desde param_file. Si param_file=None, carga los 
-        parámetros por defecto.
-
-        param_file: String con al ubicación del archivo json de parámetros"""
-        try:
-            print("Cargando parametros de fichero.\n") 
-            with open(self.param_file) as fp:
-                params = json.load(fp)
-        # Si la ubicación de param_file no es valida, carga la configuración 
-        #por defecto
-        except:
-            print("Fichero de parametros invalido/vacio.\n",
-                  "Cargando parametros por defecto.\n")  
-            params = {}
-            params["ngen"] = 100
-            params["npop"] = 10
-            params["ps"] = 1
-            params["t_size"] = 2
-            params["n_torneos"] = params["npop"]
-            params["pc"] = 0.2
-            params["pm"] = 1
-            self.params=params   
-            self.save_params()
-              
-        return params
-    
-    def save_params(self):
-        # Codigo para guardar los parametros
-        with open(self.param_file,"w") as fp:
-                  json.dump(self.params, fp)
-        
-    def modify_parameters(key,value,self):
-         self.parameters[key]=value
-         self.save_params()
-         
-         
-    def load_instance(self):
-        """
-        Carga las ciudades y el óptimo conocido de la instancia del problema
-        dada por self.instance (ver __init__). 
-
-        Ambas instancias vienen dadas por archivos .tsp extraídas de la página
-        http://comopt.ifi.uni-heidelberg.de/software/TSPLIB95/index.html
-
-        La instancia facil es el problema "eil101" de dicha página y la  
-        la instancia compleja es "rl11849".
-        """
-
-        # Carga las ciudades de los archivos .tsp en una numpy array.
-
-        # (Las indexaciones [6:-1] y [:,1:] son necesarias para cargar las
-        # coordenadas de las ciudades corresctamente, por las descripciones, las
-        # lineas en blanco y la numeración en el archivo .tsp)
-
-        # Hemos añadido el óptimo (extraido de la página) manualmente. El  
-        # optimo de la instancia compleja es solo una cota inferior del óptimo.
-        # real. Dado que, en geenral, el algoritmo queda lejos del optimo,
-        # no usamos este dato para la condición de terminación, es solo 
-        # a nivel informativo
-
-        if self.instance == "simple":
-            with open("./instances/simple.tsp") as fp:
-                f = fp.readlines()
-                cities = np.loadtxt(f[6:-1], dtype=int)[:, 1:]
-            optimal = 629
-        elif self.instance == "complex":
-            with open("./instances/complex.tsp") as fp:
-                f = fp.readlines()
-                cities = np.loadtxt(f[6:-1], dtype=int)[:, 1:]
-            optimal = 923368
-        else:
-            raise ValueError("Selecciona Instance=\"simple\" ó \"complex\"")
-        return cities, optimal
 
 
 #%%######################################## MAIN #########################################
