@@ -1,4 +1,5 @@
 import sys, os
+import time
 # We need to import modules from the current
 # and parent directories.
 current = os.path.dirname(os.path.realpath(__file__))
@@ -7,7 +8,7 @@ print(current)
 sys.path.append(current)
 sys.path.append(parent)
 
-from test import Test
+from test_EA import Test
 from GA_TSP import Genetic_Algorithm_TSP
 
 def main():
@@ -24,7 +25,8 @@ def main():
     for pc in [0.2, 0.5, 1]:
         param_file = f"./params/params_{instance}_pc{pc}.json"
         print(f"Initial execution case: {instance}, pc={pc}")
-        experiment[pc] = Test(instance, n_exe=12, param_file=param_file)
+        EA=GA_TSP("GA_pc_{}"-format(pc),instance, param_file)
+        experiment[pc] = Test(EA, n_exe=1)
         gen_converg = experiment[pc].estimate_Tconverg()
         print(f"Converges at generation {gen_converg}")
         time.sleep(0.5)
@@ -41,13 +43,10 @@ def main():
         results.append(experiment[pc].execute(ngen))
         time.sleep(0.5)
 
-    plot_comparison(instance, experiment, ngen)
+    Test.plot_comparison(instance, experiment, ngen)
 
 
 if __name__ == "__main__":
     main()
   
-if __name__ == "__main__":
-
-    main()
     

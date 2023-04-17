@@ -39,9 +39,9 @@ def load_parameters(parameters_file):
         print("Invalid/empty parameter file.\nUsing default parameters.\n")
         parameters = {}
         parameters["n_gen"] = 1000
-        parameters["n_pop"] = 100
+        parameters["n_pop"] = 1000
         parameters["ps"] = 1
-        parameters["t_size"] = 2
+        parameters["t_size"] = 3
         parameters["n_tournaments"] = parameters["n_pop"]
         parameters["pc"] = 1
         parameters["pm"] = 1

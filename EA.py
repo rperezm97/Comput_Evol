@@ -165,7 +165,7 @@ class Evolutive_algorithm(ABC):
             # and the standard deviations hasn't changed (thus, the algorithm
             # has exploited that solution and the best individual has taken
             # over most of the population). 
-            if it>=100  \
+            if it>=500  \
                and abs(bests[it]-bests[it-100]) < 0.001 \
                and (SDs[t]-SDs[t-1]) < 0:
 

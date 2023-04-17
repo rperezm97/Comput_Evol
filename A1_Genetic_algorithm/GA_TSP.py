@@ -59,7 +59,7 @@ class Genetic_Algorithm_TSP(Evolutive_algorithm):
         self.n_children =self.n_pop
         
         super().__init__(name) #Path(instance_file).stem
-        self.parameter=parameters
+        self.parameters=parameters
         
     def init_pop(self):
         """
@@ -114,7 +114,6 @@ class Genetic_Algorithm_TSP(Evolutive_algorithm):
         """
         # Since the parents are generated randomly,  
         return parents.reshape(-1, 2)
-    
     
     def crossover(self, parents):
         """

@@ -7,7 +7,7 @@ Created on Tue Dec 13 19:47:57 2022
 import time, os
 import numpy as np
 import matplotlib.pyplot as plt
-from tests import Test
+from test_EA import Test
 
 
 
