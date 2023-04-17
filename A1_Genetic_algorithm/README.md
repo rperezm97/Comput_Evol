@@ -6,22 +6,29 @@ The problem is known to be NP-hard, meaning that its solution time grows exponen
 
 
 # Files
-The files for this activityconsist of:
+The files for this activity consist of:
 
-- main.py: This file implements the genetic algorithm for TSP using the classes defined in the ea and test modules.
-- ea.py: This file contains the implementation of the abstract EA class, which defines the basic structure of an evolutive algorithm, and the GA class, which implements the genetic algorithm for TSP.
+- GA_TSP.py: This file implements the genetic algorithm for TSP using the classes defined in the EA and test modules in the parent folder.
 - test.py: This file implements the Test class, which performs the evaluation loop of the genetic algorithm for TSP.
-- params.json: This file contains the parameters used in the genetic algorithm, such as the population size, crossover and mutation probabilities, and the number of generations.
+-aux.py: file with auxiliar functions for GA_TSP.
+- main.py: This file runs statistical test for evaluating and comparing the genetic algorithm for both the simple and complex instance for three values of the parameter probability of crossover: pc=0.2,0.5 and 0.7.
 
+The subfolder contained here are:
+
+-instances: folder containing the coordinates of the cities for two instances of the problems, simple (100 cities) and comples (10000 cities) 
+-params: folder with the json files containing a dict of parameters to be imported by TSP_GA.
+-logs: folder containing the logs generated in the different runs of GA_TSP.
+-plots: the plots of each run of a GA_TSP, or the statistical test for evaluation.
 
 # Usage
-To run the genetic algorithm for TSP, simply execute the main.py file with Python 3:
-"""
-python main.py
-"""
-The program will read the TSP instance from a file named instance.txt located in the same directory as main.py. The instance file should contain the coordinates of each city in a two-dimensional space. Each line of the file should be in the format x y, where x and y are the coordinates of a city. The first line should contain the number of cities in the instance.
 
-The program will output the best solution found and its fitness value, as well as a plot of the fitness values of the best and average individuals over the generations.
+Run main.py the statistical test for evaluating and comparing the genetic algorithm for both the simple and complex instance for three values of the parameter probability of crossover: pc=0.2,0.5 and 0.7. 
+
+To run a the GA_TSP with a particular instance and a particualr set of parameters, you can call the method self.run() in an instance of a Genetic_Algorithm_TSP from GA_TSP.py. Read the docstring for more info about how to input the parameters and instances.
+
+For doing a statatistical test for evaluation of a particualr set of parameters, instantiate a Genetic_Algorithm_TSP object and run the self.run_test() method of an instance of Test (selecting the instance of the Genetic_Algorithm_TSP and the number of executions for the test, ie, the size of the sample).
+
+The evaluation of the algorithm is performed using measures and types of graphs described in chapter 9 of the book by Carmona and Galán. The results are presented in the results folders, which contains a log of the fitness values of the best and average individuals over the generations, as well as a plot of these values.
 
 # Implementation
 We will be implementing a genetic algorithm for solving the TSP, with the following specific characteristics:
@@ -35,9 +42,4 @@ We will be implementing a genetic algorithm for solving the TSP, with the follow
 - Survivor selection: We will use a generational model, which replaces the entire current population with a new one. We will also apply elitism, so that the best individual in the current population is preserved in the next generation, provided that there is no individual in the new population with equal or better fitness value.
 We will use two different TSP instances for testing our genetic algorithm: one with 100 cities and another with 10,000 cities. For each instance, we will vary the crossover probability and evaluate the performance of the genetic algorithm.
 
-
-# Evaluation
-The test.py file performs the evaluation of the genetic algorithm using the parameters defined in the params.json file. The program evaluates the algorithm for two TSP instances: a simple one with 100 cities and a complex one with 10,000 cities.
-
-The evaluation of the algorithm is performed using measures and types of graphs described in chapter 9 of the book by Carmona and Galán. The results are presented in the results folder, which contains the fitness values of the best and average individuals over the generations, as well as a plot of these values.
 
