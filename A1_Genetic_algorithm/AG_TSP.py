@@ -8,6 +8,7 @@ from pathlib import Path
 # and parent directories.
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
+print(current)
 sys.path.append(current)
 sys.path.append(parent)
 
@@ -42,30 +43,33 @@ class Genetic_Algorithm_TSP(Evolutive_algorithm):
         self.cities = aux.load_instance(instance_file)
         self.n_cities = len(self.cities)
        
-        # Load the specific AG parameters from the parameters file
+        # Load the specific GA parameters from the parameters file
         parameters = aux.load_parameters(parameters_file)
+        self.n_gen = parameters["n_gen"]
         self.n_pop = parameters["n_pop"]
         self.ps = parameters["ps"]
         self.t_size = parameters["t_size"]
         self.n_tournaments = self.n_pop
         self.pc = parameters["pc"]
         self.pm = parameters["pm"]
+        self.elitism=parameters["elitism"]
         #Set the generic EA parameters
         self.n_parents=2
         self.n_children =self.n_pop
         
         super().__init__(name) #Path(instance_file).stem
+        self.parameter=parameters
         
     def init_pop(self):
         """
-        Initialize the population matrix with random permutations of the city 
-        indices.
+        Calculate the city distances matrix and initialize the population matrix 
+        with random permutations of the city indices.
         """
         print("Initializing population, calculating distance matrix...")
         self.city_distances = aux.calculate_city_distances(self.cities)
         city_idxs = np.arange(1, self.n_cities)
         return np.array([np.random.permutation(city_idxs) 
-                        for i in range(self.n_pop)])
+                        for _ in range(self.n_pop)])
 
     def f_adapt(self, x):
         """
@@ -121,7 +125,8 @@ class Genetic_Algorithm_TSP(Evolutive_algorithm):
       
         if (random.random() >= self.pc or p2 is None):
             return p1, p2
-
+        
+        #print("cross",p1,p2)
         n = len(p1)
         # Choose two random crossover points
         b = np.random.randint(0, n-1)
@@ -153,6 +158,7 @@ class Genetic_Algorithm_TSP(Evolutive_algorithm):
         c1 = aux.find_new_pos(p1, c1)
         c2 = aux.find_new_pos(p2, c2)
 
+        #print("cross",a,b,c1,c2)
         return c1, c2
     
     
@@ -163,6 +169,7 @@ class Genetic_Algorithm_TSP(Evolutive_algorithm):
          # If the random number generated is greater than the mutation probability,
         # return the original individual
         if random.random() >= self.pm:
+            
             return x
         # Get the length of the individual
         n = len(x)
@@ -176,22 +183,29 @@ class Genetic_Algorithm_TSP(Evolutive_algorithm):
         x[i], x[j] = x[j], x[i]
         return x
 
-    def select_survivors(self, parents, children):
+    def select_survivors(self, children):
         """
-        Select the next generation of individuals from the parents and children.
+        Substitute the previous popualtion with the children and aply elitism
+        if applicable.
         """
-        # Combine the parents and children into a single population
-        all_pop = np.vstack((self.pop, children))
-        # Compute the fitness values for the entire population
-        all_pop_fit = self.f_adapt(all_pop)
-        # Select the best individuals to be the parents of the next generation
-        elit_idx = np.argsort(all_pop_fit)[:self.n_pop]
-        # Update the population and fitness arrays with the selected individuals
-        self.pop = all_pop[elit_idx]
-        self.pop_fit = all_pop_fit[elit_idx]
-        # Return the updated population
-        return self.pop
+        # Save the previous best individual for elitism and update the
+        # population with the children
+        prev_best_adapt=self.best_adapt
+        prev_best=self.pop[self.best]
+        self.pop=children
+        self.pop_fit = self.f_adapt(children)
+        self.best_adapt = np.min(self.pop_fit)
+        self.best = np.argmin(self.pop_fit)
+        # If we apply elitism and the best individual of the previous generation
+        # is better than the best individual of this generation
+        if self.elitism and  self.best_adapt>prev_best_adapt:
+            # Subtitute the worst individual of this generation with the 
+            # best of the previous generation
+            worst=np.argmax(self.pop_fit)
+            self.pop[worst]=prev_best
+            self.pop_fit[worst]=prev_best_adapt
+            self.best_adapt=prev_best_adapt
 
 if __name__=="__main__":
-    a=Genetic_Algorithm_TSP(name="Test", instance_file="/root/PYTHON/Comput_Evol/A1/instances/complex.tsp")
+    a=Genetic_Algorithm_TSP(name="Test", instance_file="/root/PYTHON/Comput_Evol/A1/instances/simple.tsp")
     a.run()

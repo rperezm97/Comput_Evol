@@ -49,7 +49,7 @@ class Evolutive_algorithm(ABC):
         child classes."""
         pass
 
-    def select_survivors(self, parents, children):
+    def select_survivors(self, children):
         """Select the individuals to be included in the next generation.
         To be implemented by child classes."""
         pass
@@ -68,17 +68,16 @@ class Evolutive_algorithm(ABC):
         for match in parent_matches:
             # Apply crossover and mutation to the entire array of parent indices
             new_children = self.crossover(self.pop[match])
+            
+            
             for child in new_children:
                 children[i] = self.mutate(child)
                 i += 1
 
         # Update the population and best individual
-        self.pop = self.select_survivors(self.pop, children)
-        self.pop_fit = self.f_adapt(self.pop)
-        self.best_adapt = np.min(self.pop_fit)
-        self.best = np.argmin(self.pop_fit)
+        self.select_survivors(children)
 
-    def run(self, ngen=10000):
+    def run(self):
         """
         Runs the evolutionary algorithm for ngen generations.
 
@@ -95,8 +94,8 @@ class Evolutive_algorithm(ABC):
             reference generations
         """
         # Initialize some variables for tracking progress
-        means = np.zeros(ngen)
-        bests = np.zeros(ngen)
+        means = np.zeros(self.n_gen)
+        bests = np.zeros(self.n_gen)
         # Since it's computationally expensive, the standard deviations will 
         # only be calculated for 50 equally spaced refence generations (at most; 
         # if the algorithm converges it will be less)
@@ -119,14 +118,15 @@ class Evolutive_algorithm(ABC):
         print(start_msg)
         log.write(start_msg)
         
-        for it in range(ngen):
+        for it in range(self.n_gen):
             # Update the progress counter
-            progress = "Gen {}/{}".format(it, ngen)
+            progress = "Gen {}/{}".format(it, self.n_gen)
 
             # Reproduce and mutate the population
             self.reproduce()
 
             # Calculate the mean and best adaptation of the population
+            
             mean = np.sum(self.pop_fit) / self.n_pop
             means[it] = mean
             bests[it] = self.best_adapt
@@ -141,7 +141,7 @@ class Evolutive_algorithm(ABC):
             print(progress, end=clear_line, flush=True)
 
             # Check for convergence every 50 generations
-            if it % (ngen//50) == 0:
+            if it % (self.n_gen//50) == 0:
                 # Calculate the sample DE of the means
                 SDs[t] = np.sqrt(np.sum(
                     (means[:it+1] - csum_of_means/(it+1))**2) / it
@@ -164,8 +164,8 @@ class Evolutive_algorithm(ABC):
             # and the standard deviations hasn't changed (thus, the algorithm
             # has exploited that solution and the best individual has taken
             # over most of the population). 
-            if it>0  \
-               and abs(bests[it]-bests[it-1000]) < 0.01 \
+            if it>=100  \
+               and abs(bests[it]-bests[it-100]) < 0.001 \
                and (SDs[t]-SDs[t-1]) < 0:
 
                 gen_success = it
@@ -175,20 +175,27 @@ class Evolutive_algorithm(ABC):
 
                 # Print the final results
                 success_msg = "{}: Convergence reached in {:.2f} seconds, after\
-                            {} generations.\n".format(self.name, t_conver, ngen)
+                            {} generations.\n".format(self.name, t_conver, 
+                                                      self.n_gen)
     
                 success_msg += "Fitness of the best individual: \
                             {},{}".format(self.best_adapt,bests[it])
                 print(success_msg, flush=True)
                 log.write(success_msg + "\n")
                 break
+        
+        # Set the best and mean values of the generations after convergence as 
+        # the value of convergence, for the plots                 
+        bests[it:]= bests[it]
+        means[it:] =means[it]
         # When the loop finishes, check if the convergence has not been reached
         if not gen_success:
             t2 = time.time()
             t_conver = t2 - t1
             # Print the final results
             success_msg = "{}: Convergence not reached in {:.2f} seconds, after\
-                           {} generations.\n".format(self.name, t_conver, ngen)
+                           {} generations.\n".format(self.name, t_conver, 
+                                                     self.n_gen)
             success_msg += "Fitness of the best individual: \
                             {}".format(self.best_adapt)
             print(success_msg, flush=True)
@@ -198,13 +205,13 @@ class Evolutive_algorithm(ABC):
         
         # Plot the progress graph
 
-        self.plot_convergence(ngen, gen_success, bests, means, SDs)
+        self.plot_convergence(gen_success, bests, means, SDs)
 
         # Todo: save best individual in a file
 
         return means, bests, t_conver, gen_success
 
-    def plot_convergence(self, ngen, gen_success, bests, means, SDs):
+    def plot_convergence(self, gen_success, bests, means, SDs):
         """
         Plots a graph showing the progress of the algorithm, with the value of 
         the best individual, the mean of the population, and the standard 
@@ -227,7 +234,7 @@ class Evolutive_algorithm(ABC):
         - None
 
         """
-        ngen = len(bests)
+        ngen = self.n_gen
         x = np.arange(ngen)
         # Create a list with the indices of the 50 reference generations
         idx = [i for i in range(ngen) if not i % (ngen//50)]
@@ -237,6 +244,7 @@ class Evolutive_algorithm(ABC):
 
         # Plot:
         # The mean
+          # The mean
         plt.plot(x, means, linewidth=0.3, color="orange", label='Mean')
         # The standard deviation at the reference points
         plt.errorbar(x[idx], means[idx], yerr=SDs, color='Black',
@@ -258,7 +266,10 @@ class Evolutive_algorithm(ABC):
         plt.xlabel('Generations')
         plt.ylabel('Adaptation value')
 
-        plt.title('AG {} '.format(self.name))
+        plt.title('{} '.format(self.name))
+        
+        # Show the plot
         #plt.show()
+        
         # Save the figure in the plots folder and show it
         plt.savefig('plots/{}.png'.format(self.name))

@@ -38,13 +38,14 @@ def load_parameters(parameters_file):
     except:
         print("Invalid/empty parameter file.\nUsing default parameters.\n")
         parameters = {}
-        parameters["n_gen"] = 100
-        parameters["n_pop"] = 10
+        parameters["n_gen"] = 1000
+        parameters["n_pop"] = 100
         parameters["ps"] = 1
         parameters["t_size"] = 2
         parameters["n_tournaments"] = parameters["n_pop"]
-        parameters["pc"] = 0.2
+        parameters["pc"] = 1
         parameters["pm"] = 1
+        parameters["elitism"]=1
         # save_parameters(parameters, "parmeters/default.json")
     return parameters
 
@@ -101,7 +102,8 @@ def tournament_selection(pop_fit,t_size):
         """
         n_pop=len(pop_fit)
         indiv_idx = random.sample(range(n_pop), k=t_size)
-        idx = min(indiv_idx, key=lambda i: pop_fit[i])
+        # TODO: What if theres more than one min?
+        idx = min(indiv_idx, key=lambda i: pop_fit[i]) 
         return idx
 
 def find_new_pos(p, c):
