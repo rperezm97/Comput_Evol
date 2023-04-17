@@ -1,0 +1,12 @@
+EJECUCIÓN 14
+ INSTANCIA=complex 
+PARAMETROS={'ngen': 100, 'npop': 10, 'ps': 1, 't_size': 2, 'n_torneos': 10, 'pc': 0.2, 'pm': 1} Iniciando...
+
+
+Generación 2:
+ Best = 86128557.57599664 Mean = 86152218.61906895 STD = 110267.2279380567
+----EXE 14 CONVERGE (EN gen=2)---
+
+Tiempo de convergencia=1.1727590560913086s
+
+COSTE MEJOR RUTA =86128557.57599664:

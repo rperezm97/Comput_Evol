@@ -1,0 +1,12 @@
+EJECUCIÓN 26
+ INSTANCIA=complex 
+PARAMETROS={'ngen': 100, 'npop': 10, 'ps': 1, 't_size': 2, 'n_torneos': 10, 'pc': 0.2, 'pm': 1} Iniciando...
+
+
+Generación 2:
+ Best = 86755327.02364635 Mean = 86774761.30753489 STD = 97388.18989670741
+----EXE 26 CONVERGE (EN gen=2)---
+
+Tiempo de convergencia=0.1607832908630371s
+
+COSTE MEJOR RUTA =86755327.02364635:

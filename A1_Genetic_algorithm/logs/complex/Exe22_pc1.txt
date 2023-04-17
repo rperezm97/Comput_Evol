@@ -1,0 +1,12 @@
+EJECUCIÓN 22
+ INSTANCIA=complex 
+PARAMETROS={'ngen': 100, 'npop': 10, 'ps': 1, 't_size': 2, 'n_torneos': 10, 'pc': 0.2, 'pm': 1} Iniciando...
+
+
+Generación 2:
+ Best = 86455610.09822716 Mean = 86613096.90071665 STD = 106480.62810508265
+----EXE 22 CONVERGE (EN gen=2)---
+
+Tiempo de convergencia=1.3899061679840088s
+
+COSTE MEJOR RUTA =86455610.09822716:

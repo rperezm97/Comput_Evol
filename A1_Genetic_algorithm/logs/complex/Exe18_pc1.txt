@@ -1,0 +1,12 @@
+EJECUCIÓN 18
+ INSTANCIA=complex 
+PARAMETROS={'ngen': 100, 'npop': 10, 'ps': 1, 't_size': 2, 'n_torneos': 10, 'pc': 0.2, 'pm': 1} Iniciando...
+
+
+Generación 2:
+ Best = 86309592.24727866 Mean = 86324602.07097372 STD = 143711.15061460153
+----EXE 18 CONVERGE (EN gen=2)---
+
+Tiempo de convergencia=0.7391753196716309s
+
+COSTE MEJOR RUTA =86309592.24727866:

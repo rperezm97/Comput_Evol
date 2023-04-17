@@ -1,0 +1,12 @@
+EJECUCIÓN 5
+ INSTANCIA=complex 
+PARAMETROS={'ngen': 100, 'npop': 10, 'ps': 1, 't_size': 2, 'n_torneos': 10, 'pc': 0.2, 'pm': 1} Iniciando...
+
+
+Generación 2:
+ Best = 86420819.38714643 Mean = 86577744.4464333 STD = 99387.09199096818
+----EXE 5 CONVERGE (EN gen=2)---
+
+Tiempo de convergencia=0.5695326328277588s
+
+COSTE MEJOR RUTA =86420819.38714643:
