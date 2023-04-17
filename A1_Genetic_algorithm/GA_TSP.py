@@ -42,12 +42,13 @@ class Genetic_Algorithm_TSP(Evolutive_algorithm):
         # Load the city coordinate matrix from the instance file 
         self.cities = aux.load_instance(instance_file)
         self.n_cities = len(self.cities)
-       
+        self.city_distances= aux.calculate_city_distances(self.cities)
         # Load the specific GA parameters from the parameters file
         parameters = aux.load_parameters(parameters_file)
         self.n_gen = parameters["n_gen"]
         self.n_pop = parameters["n_pop"]
         self.ps = parameters["ps"]
+       
         self.t_size = parameters["t_size"]
         self.n_tournaments = self.n_pop
         self.pc = parameters["pc"]
@@ -62,11 +63,11 @@ class Genetic_Algorithm_TSP(Evolutive_algorithm):
         
     def init_pop(self):
         """
-        Calculate the city distances matrix and initialize the population matrix 
-        with random permutations of the city indices.
+        Initialize the population matrix with random permutations of the city 
+        indices.
         """
         print("Initializing population, calculating distance matrix...")
-        self.city_distances = aux.calculate_city_distances(self.cities)
+        
         city_idxs = np.arange(1, self.n_cities)
         return np.array([np.random.permutation(city_idxs) 
                         for _ in range(self.n_pop)])
@@ -207,5 +208,6 @@ class Genetic_Algorithm_TSP(Evolutive_algorithm):
             self.best_adapt=prev_best_adapt
 
 if __name__=="__main__":
-    a=Genetic_Algorithm_TSP(name="Test", instance_file="/root/PYTHON/Comput_Evol/A1/instances/simple.tsp")
+    instance="/root/PYTHON/Comput_Evol/A1_Genetic_algorithm/instances/simple.tsp"
+    a=Genetic_Algorithm_TSP(name="Test", instance_file=instance)
     a.run()

@@ -19,6 +19,7 @@ class Evolutive_algorithm(ABC):
         self.best = np.argmin(self.pop_fit)
         self.optimal=None
         self.parameters= None
+        
     def init_pop(self):
         """Initialize the population. To be implemented by child classes."""
         pass
