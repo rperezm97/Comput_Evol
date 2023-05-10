@@ -34,7 +34,24 @@ class Evolutive_algorithm(ABC):
         the indices of the parents. To be implemented by child 
         classes."""
         pass
+    
+    def variation_operators(self, parents_idx):
+        """Generic application of variation operator (recombination and 
+        mutation) to prduce the children population from the selected parents.
+        Can be modified by the children classes if needed
+        """
+        parent_matches = self.match_parents(parents_idx)
 
+        children = np.empty((self.n_children, self.pop.shape[1]))
+        i = 0
+        
+        for match in parent_matches:
+            # Apply crossover and mutation to the entire array of parent indices
+            new_children = self.crossover(self.pop[match])
+            for child in new_children:
+                children[i] = self.mutate(child)
+                i += 1
+    
     def match_parents(self, parents_idx):
         """Match the selected parents for crossover. It should return a list 
         with tuples of indices of the matched parents. 
@@ -54,27 +71,16 @@ class Evolutive_algorithm(ABC):
         """Select the individuals to be included in the next generation.
         To be implemented by child classes."""
         pass
-
+    
+    
     def reproduce(self):
         """Perform reproduction for 1 generations."""
         # Select parents and create the matches by reshape the parent indices
         # array into a 3D array (for indexing the population matrix)
         parents_idx = self.parent_selection()
-        # Reshape the parent indices array into a 3D array for indexing the
-        # population matrix
-        parent_matches = self.match_parents(parents_idx)
-
-        children = np.empty((self.n_children, self.pop.shape[1]))
-        i = 0
-        for match in parent_matches:
-            # Apply crossover and mutation to the entire array of parent indices
-            new_children = self.crossover(self.pop[match])
-            
-            
-            for child in new_children:
-                children[i] = self.mutate(child)
-                i += 1
-
+        
+        children=self.variation_operators(parents_idx)
+        
         # Update the population and best individual
         self.select_survivors(children)
 

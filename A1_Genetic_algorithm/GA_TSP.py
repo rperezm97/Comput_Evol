@@ -17,7 +17,7 @@ import aux
 
 class Genetic_Algorithm_TSP(Evolutive_algorithm):
     """
-    Child class implementing a genetic algorithm (GA) for the Traveling
+    Child class from AE implementing a genetic algorithm (GA) for the Traveling
     Salesman Problem (TSP).
     """
 
@@ -45,17 +45,23 @@ class Genetic_Algorithm_TSP(Evolutive_algorithm):
         self.city_distances= aux.calculate_city_distances(self.cities)
         # Load the specific GA parameters from the parameters file
         parameters = aux.load_parameters(parameters_file)
+        # Number of generations
         self.n_gen = parameters["n_gen"]
+        # number of individuals of the population
         self.n_pop = parameters["n_pop"]
+        # Selection probability
         self.ps = parameters["ps"]
-       
+        # Tournament size
         self.t_size = parameters["t_size"]
+        # Numebr of torunaments
         self.n_tournaments = self.n_pop
+        # Cross probability
         self.pc = parameters["pc"]
+        # Mutation probability
         self.pm = parameters["pm"]
+        # Elitism ()
         self.elitism=parameters["elitism"]
         #Set the generic EA parameters
-        self.n_parents=2
         self.n_children =self.n_pop
         
         super().__init__(name) #Path(instance_file).stem

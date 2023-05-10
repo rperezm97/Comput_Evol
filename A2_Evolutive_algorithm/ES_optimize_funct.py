@@ -1,89 +1,57 @@
 import numpy as np
-import random
-from multiprocessing import Pool
-from functools import partial
-from pop import AE
+import sys, os
 from scipy.stats.qmc import LatinHypercube
-from pop import Evolutive_algorithm
+current = os.path.dirname(os.path.realpath(__file__))
+parent = os.path.dirname(current)
+print(current)
+sys.path.append(current)
+sys.path.append(parent)
+
+from EA import Evolutive_algorithm
+import aux
 
 class Evolution_Strategy(Evolutive_algorithm):
-    """Implementation of the Evolution Strategy algorithm.
-    
-    This class inherits from the Evolutive_algorithm abstract class and 
-    implements the required methods to run the Evolution Strategy algorithm.
-
-    Attributes:
-        function (Function): The function to be optimized.
-        n_pop (int): Number of individuals in the population.
-        n: Size of the variable vector x
-        mutation_step (int): Number of sigma values of the individual (strategy 
-                     parameters s).
-        d (int): Total dimension of an individual.
-        num_children (int): Number of offsprings created in each generation.
-        num_parents (int): Number of parents involved in the creation of an 
-                           offspring.
-        tau (float): Hyperparameter for individual mutation of s
-        tau_prime (float): Hyperparameter for global change in mutability.
-        eps_0 (float): Lower threshold for strategy parameters.
-        selection_type (str): the type of survivor selection to use
     """
-    def __init__(self, function, params):
+    Child class implementing an Evolution Strategy (GA) for optimizing a 
+    multivariable function (expressed in a Function object, see funct.py).
+
+    """
+    def __init__(self, function, parameters_file):
        """
         Initializes the class with the following attributes:
     
-        function: Function object to be optimized, defined in funct.py
-        params: Dictionary of parameters, with the following keys:
-            nu: Number of individuals in the population
-            n: Dimension of the variables of the function to optimize
-            mutation_step: Number of sigma values of the individual (strategy 
-                   parameters). It can be "1" for non-correlated 1-step size 
-                   mutation, or "n" for non-correlated n-step size mutation
-            lambda: Number of offsprings generated
-            rho: Number of parents involved in the creation of an offspring. It
-                 should be greater than 2, since we're performing global 
-                 crossover
-            crossover_type: String that determines the type of crossover 
-                operator. Can be "discrete" or "intermediate"
-            tau(float): Hyperparameter that determines the step for the 
-                        mutation of the strategy parameters s.It is the standard 
-                        deviation of the log-normal distribution that generates a 
-                        perturbation of each of the strategy parameters independently.
-            tau_prime(float): Hyperparameter that determines the step for 
-                the mutation of the strategy parameters. It is the standard 
-                deviation of the log-normal distribution that generates the 
-                global change in the mutability. Only needed for the 
-                non-correlated n-step size mutation, to preserve the degrees 
-                of freedom.
-            eps_0(float): Hyperparameter that determines the lower threshold
-                          for the strategy parameters, so they don't reach 0.
-            selection_type (str): the type of survivor selection to use, either 
-                         "+" or ","
+        - function: Function object to be optimized, as defined in funct.py
+        -parameters_file: The path of a json file containing the parameters 
+        as a dictionary {key:value}. If None, the default parameters will
+        be loaded.
                   
        """
        # Function to be optimized
        self.function = function
+       
+       parameters = aux.load_parameters(parameters_file)
        # Number of individuals in the population
-       self.n_pop = params["nu"]
-       #Number of dimensions of the variables of the function to optimize
-       self.n = params["n"]
+       self.n_pop = parameters["nu"]
+       #Number of variables of the function to optimize
+       self.n = parameters["n"]
        # Number of sigma values of the individual (strategy parameters)
-       self.mutation_step = self.n if params["mutation_step"] else 1
+       self.mutation_step = self.n if parameters["mutation_step"] else 1
        # Total dimension of an individual
        self.d = self.n + self.mutation_step
        # Number of offsprings generated
-       self.num_children = params["lambda"]
+       self.num_children = parameters["lambda"]
        # Number of parents involved in the creation of an offspring
-       self.num_parents = params["rho"]
+       self.num_parents = parameters["rho"]
        #The type of crossover (intermediate or discrete)
-       self.crossover_type= params["crossover_type"]
+       self.crossover_type= parameters["crossover_type"]
        # Hyperparameter for individual mutation of strategy parameters
-       self.tau = params["tau"]
+       self.tau = parameters["tau"]
        # Hyperparameter for global change in mutability
-       self.tau_prime = 0 if self.mutation_step == 1 else params["tau_prime"]
+       self.tau_prime = 0 if self.mutation_step == 1 else parameters["tau_prime"]
        # Lower threshold for strategy parameters to prevent 0
-       self.eps_0 = params["eps_0"]
+       self.eps_0 = parameters["eps_0"]
        #Survivor selection type
-       self.selection_type=params["selection_type"]
+       self.selection_type=parameters["selection_type"]
     def init_pop(self):
         """
         Initialize the population.The variable vector x is initialized using 
@@ -141,7 +109,7 @@ class Evolution_Strategy(Evolutive_algorithm):
         Perform crossover on a set of parent individuals to produce offspring.
         For the variables of the parents, it can perform discrete crossover or 
         intermediate promediate crossover, depending on the value indicated 
-        in params["crossover_type"]. For the strategy parameters, it always 
+        in parameters["crossover_type"]. For the strategy parameters, it always 
         does intermediate promediate recombination.
         
         Parameters

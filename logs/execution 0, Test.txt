@@ -1,0 +1,32 @@
+execution 0, Test
+
+PARAMETERS={'n_gen': 1000, 'n_pop': 100, 'ps': 1, 't_size': 2, 'n_tournaments': 100, 'pc': 1, 'pm': 1, 'elitism': 1}Iniciating...
+
+execution 0, Test: gen 0:
+Best = 2822.238679362478 Mean = 3360.940268098271 STD = nan
+execution 0, Test: gen 20:
+Best = 2612.9640980293384 Mean = 3019.3978812239534 STD = 104.13225060318575
+execution 0, Test: gen 40:
+Best = 2423.186082273644 Mean = 3028.909900253316 STD = 102.35085241614668
+execution 0, Test: gen 60:
+Best = 2388.8455355615 Mean = 2760.0905956714428 STD = 126.84656705467442
+execution 0, Test: gen 80:
+Best = 2208.571807489405 Mean = 2694.877334297488 STD = 176.85935213560947
+execution 0, Test: gen 100:
+Best = 2208.571807489405 Mean = 2677.160682063005 STD = 182.28266262288727
+execution 0, Test: gen 120:
+Best = 2208.571807489405 Mean = 2652.1107807467224 STD = 182.1032822239722
+execution 0, Test: gen 140:
+Best = 2208.571807489405 Mean = 2622.397160995056 STD = 188.23170591217763
+execution 0, Test: gen 160:
+Best = 2187.7835882660556 Mean = 2697.526586356484 STD = 185.3747781573283
+execution 0, Test: gen 180:
+Best = 2187.7835882660556 Mean = 2740.0146616533693 STD = 176.4341781449193
+execution 0, Test: gen 200:
+Best = 2187.7835882660556 Mean = 2720.678444078794 STD = 169.55191205177465
+execution 0, Test: gen 220:
+Best = 2187.7835882660556 Mean = 2800.7289146751054 STD = 162.54621715158828
+execution 0, Test: gen 240:
+Best = 2187.7835882660556 Mean = 2789.910379121248 STD = 155.78526165369385
+execution 0, Test: Convergence reached in 13.95 seconds, after                            1000 generations.
+Fitness of the best individual:                             2187.7835882660556,2187.7835882660556
