@@ -7,6 +7,16 @@ Created on Wed Feb  8 12:21:08 2023
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+from funct import Function
+# -*- coding: utf-8 -*-
+"""
+Created on Wed Feb  8 12:21:08 2023
+
+@author: berti
+"""
+import numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
 # Define the abstract class "Function"
 class Function:
@@ -64,6 +74,7 @@ class Function:
         ax.plot_surface(X, Y, Z, cmap="plasma")
         ax.set_title(self.name)
         plt.show()
+    
 
 # Define the child class "Powell_sum"
 class Powell_sum(Function):
@@ -128,7 +139,7 @@ class Xin_she_yang_4(Function):
         return np.sum(np.sin(x)**2 , axis=a)- np.exp(-np.sum(x**2, axis=a))* \
             np.exp(-np.sum(np.sin(np.sqrt(abs(x)))**2, axis=a))
 
-    
+
 if __name__ == "__main__":
     
     powell = Powell_sum()
