@@ -1,1 +1,1 @@
-{"ngen": 5000, "npop": 100, "ps": 1, "t_size": 2, "n_torneos": 100, "pc": 1, "pm": 1}
+{"ngen": 5000, "npop": 100, "ps": 1, "t_size": 2, "n_torneos": 100, "pc": 1, "pm": 0.2}

@@ -93,8 +93,6 @@ def modify_parameters(parameters, key, value):
     parameters[key] = value
     save_parameters()
 
-
-
 ### FUNCTION TO DECODE CHROMOSOME
 
 def decode(self, chromosome, BNF_rules, expression=None, decoding_idx=0):
@@ -148,7 +146,7 @@ def decode(self, chromosome, BNF_rules, expression=None, decoding_idx=0):
                 decoding_idx=decoding_idx+1
             print(new_expression, decoding_idx)
             # Do a recursive call to decode the new expression
-            return self.decode(chromosome, 
+            return decode(chromosome, 
                               new_expression, 
                               decoding_idx)
             
@@ -158,7 +156,3 @@ def decode(self, chromosome, BNF_rules, expression=None, decoding_idx=0):
             return 
 
 
-
-def get_sample(function, n_samples):
-    A,B=function.dom[0]
-    step=2
