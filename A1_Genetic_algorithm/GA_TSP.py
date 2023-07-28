@@ -40,7 +40,7 @@ class Genetic_Algorithm_TSP(Evolutive_algorithm):
         # extension. 
         
         # Load the city coordinate matrix from the instance file 
-        self.cities = aux.load_instance(instance)
+        self.cities =aux.load_instance(instance)
         self.n_cities = len(self.cities)
         self.city_distances= aux.calculate_city_distances(self.cities)
         # Load the specific GA parameters from the parameters file
@@ -74,7 +74,7 @@ class Genetic_Algorithm_TSP(Evolutive_algorithm):
         """
         print("Initializing population, calculating distance matrix...")
         
-        city_idxs = np.arange(1, self.n_cities)
+        city_idxs = np.arange(1, self.n_cities,dtype=int)
         return np.array([np.random.permutation(city_idxs) 
                         for _ in range(self.n_pop)])
 
@@ -137,12 +137,12 @@ class Genetic_Algorithm_TSP(Evolutive_algorithm):
         # Choose two random crossover points
         b = np.random.randint(0, n-1)
         a = np.random.randint(0, n-1)
-        start = min(a, b)
-        end = max(a, b)
+        start = 2#min(a, b)
+        end = 5#max(a, b)
 
         # Create two empty children
-        c1 = np.zeros(n, dtype=float)
-        c2 = np.zeros(n, dtype=float)
+        c1 = np.zeros(n, dtype=int)
+        c2 = np.zeros(n, dtype=int)
 
         # Copy the segment from parent 1 to child 1
         c1[start:end+1] = p1[start:end+1]
@@ -155,7 +155,7 @@ class Genetic_Algorithm_TSP(Evolutive_algorithm):
         notc2 = p2-c2
 
         # Add the missing genes to child 1 and child 2
-        notc1_in_notc2 = np.in1d(notc2, notc1).astype(float)
+        notc1_in_notc2 = np.in1d(notc2, notc1)
         c1+= notc2*notc1_in_notc2
         notc2_in_notc1 = np.in1d(notc1, notc2)
         c2 += notc1*notc2_in_notc1
@@ -163,14 +163,14 @@ class Genetic_Algorithm_TSP(Evolutive_algorithm):
         # Find the remaining missing genes and add them to child 1 and child 2
         c1 = aux.find_new_pos(p1, c1)
         c2 = aux.find_new_pos(p2, c2)
-
+        print (c1, c2)
         #print("cross",a,b,c1,c2)
         return c1, c2
     
     
     def mutate(self, x):
         """
-        Perform a mutation on individual x by swapping two randomly chosen genes.
+        3156427Perform a mutation on individual x by swapping two randomly chosen genes.
         """
          # If the random number generated is greater than the mutation probability,
         # return the original individual

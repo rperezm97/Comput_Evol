@@ -68,7 +68,7 @@ class Evolutive_algorithm(ABC):
         parent_matches = self.match_parents(parents_idx)
 
         
-        children = np.empty((self.n_children, self.pop.shape[1]))
+        children = np.empty((self.n_children, self.pop.shape[1]),dtype=int)
         
         batch_size = int(len(parent_matches)*0.2)
         try:

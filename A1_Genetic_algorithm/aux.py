@@ -38,8 +38,8 @@ def load_parameters(parameters_file):
     except:
         print("Invalid/empty parameter file.\nUsing default parameters.\n")
         parameters = {}
-        parameters["n_gen"] = 1000
-        parameters["n_pop"] = 100
+        parameters["n_gen"] = 100
+        parameters["n_pop"] = 10
         parameters["ps"] = 1
         parameters["t_size"] = 3
         parameters["n_tournaments"] = parameters["n_pop"]
@@ -130,6 +130,7 @@ def find_new_pos(p, c):
         pos = np.where(p == i)[0][0]
         # While the index is not free in child 'c', continue looking for a free
         # position
+        
         while pos not in free:
             k = c[pos]
             pos = np.where(p == k)[0][0]
