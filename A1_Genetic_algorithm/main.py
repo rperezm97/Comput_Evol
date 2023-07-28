@@ -23,9 +23,10 @@ def main():
 
     experiment = {}
     for pc in [0.2, 0.5, 1]:
-        param_file = f"./params/params_{instance}_pc{pc}.json"
+        parameters_file = f"./params/params_{instance}_pc{pc}.json"
         print(f"Initial execution case: {instance}, pc={pc}")
-        EA=GA_TSP("GA_pc_{}"-format(pc),instance, param_file)
+        name="GA_pc_{}".format(pc)
+        Genetic_Algorithm_TSP(name, instance, parameters_file)
         experiment[pc] = Test(EA, n_exe=1)
         gen_converg = experiment[pc].estimate_Tconverg()
         print(f"Converges at generation {gen_converg}")

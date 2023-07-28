@@ -2,7 +2,7 @@ import numpy as np
 from abc import ABC
 import time
 import matplotlib.pyplot as plt
-
+from multiprocessing import Pool, cpu_count
 import os
 
 class Evolutive_algorithm(ABC):
@@ -14,7 +14,7 @@ class Evolutive_algorithm(ABC):
         individual, and store the best individual and its adaptation."""
         self.name = name
         self.pop = self.init_pop()
-        self.pop_fit = self.f_adapt(self.pop)
+        self.pop_fit = self.f_fit(self.pop)
         self.best_adapt = np.min(self.pop_fit)
         self.best = np.argmin(self.pop_fit)
         self.optimal=None
@@ -24,8 +24,8 @@ class Evolutive_algorithm(ABC):
         """Initialize the population. To be implemented by child classes."""
         pass
 
-    def f_adapt(self, pop):
-        """Calculate the adaptation of each individual in the population.
+    def f_fit(self, pop):
+        """Calculate the fitness value of each individual in the population.
         To be implemented by child classes."""
         pass
 
@@ -39,8 +39,11 @@ class Evolutive_algorithm(ABC):
         """Match the selected parents for crossover. It should return a list 
         with tuples of indices of the matched parents. 
         To be implemented by child classes."""
-
-    def crossover(self, parents):
+    def variation_operators(self,parent_match):
+        children=self.crossover(self.pop[parent_match])
+        return [self.mutate(child) for child in children] 
+    
+    def crossover(self, parent):
         """Perform crossover on two parents to create two children. To be
         implemented by child classes."""
         pass
@@ -64,16 +67,24 @@ class Evolutive_algorithm(ABC):
         
         parent_matches = self.match_parents(parents_idx)
 
-        children = np.empty((self.n_children, self.pop.shape[1]))
-        i = 0
         
-        for match in parent_matches:
-            # Apply crossover and mutation to the entire array of parent indices
-            new_children = self.crossover(self.pop[match])
-            for child in new_children:
-                children[i] = self.mutate(child)
-                i += 1
-                
+        children = np.empty((self.n_children, self.pop.shape[1]))
+        
+        batch_size = int(len(parent_matches)*0.2)
+        try:
+        
+            for i in range(0, len(parent_matches), batch_size):
+                pool = Pool(processes=cpu_count())
+                batch = parent_matches[i:i+batch_size]
+                result=pool.map_async(self.variation_operators, batch).get()  # process data in batches
+                children[2*i:2*(i+batch_size)]=[child 
+                                for children_set in result
+                                for child in children_set]
+
+        finally:
+            pool.close()  # Close the pool
+            pool.join()   # Wait for all the worker processes to exit
+            
         # Update the population and best individual
         self.select_survivors(children)
 
@@ -162,7 +173,7 @@ class Evolutive_algorithm(ABC):
             # Check for convergence: in 100 generations, the best individual
             # hasn't improved (thus we have reached a plateau in exploration)
             # and the standard deviations hasn't changed (thus, the algorithm
-            # has exploited that solution and the best individual has taken
+            # has exploited that solution and t,e best individual has taken
             # over most of the population). 
             if it>=500  \
                and abs(bests[it]-bests[it-100]) < 0.001 \

@@ -6,7 +6,7 @@ import random
 
 ### LOADING DATA FUNCTIONS ###
 
-def load_instance(instance_file):
+def load_instance(instance):
     """
     Load the cities and the known optimum from the instance file specified 
     in instance_file.
@@ -15,8 +15,8 @@ def load_instance(instance_file):
 
     :return: A numpy array with the city coordinates.
     """
-    if os.path.isfile(instance_file):
-        with open(instance_file) as fp:
+    if os.path.isfile(instance):
+        with open(instance) as fp:
             f = fp.readlines()
             cities = np.loadtxt(f, dtype=int)[:, 1:]
     else:
@@ -39,7 +39,7 @@ def load_parameters(parameters_file):
         print("Invalid/empty parameter file.\nUsing default parameters.\n")
         parameters = {}
         parameters["n_gen"] = 1000
-        parameters["n_pop"] = 1000
+        parameters["n_pop"] = 100
         parameters["ps"] = 1
         parameters["t_size"] = 3
         parameters["n_tournaments"] = parameters["n_pop"]

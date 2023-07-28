@@ -21,7 +21,7 @@ class Genetic_Algorithm_TSP(Evolutive_algorithm):
     Salesman Problem (TSP).
     """
 
-    def __init__(self, name, instance_file, parameters_file=None, known_optimal=None):
+    def __init__(self, name, instance, parameters_file=None, known_optimal=None):
         """
         Initialize the algorithm with the given parameters and cities in the 
         corresponding files.
@@ -40,7 +40,7 @@ class Genetic_Algorithm_TSP(Evolutive_algorithm):
         # extension. 
         
         # Load the city coordinate matrix from the instance file 
-        self.cities = aux.load_instance(instance_file)
+        self.cities = aux.load_instance(instance)
         self.n_cities = len(self.cities)
         self.city_distances= aux.calculate_city_distances(self.cities)
         # Load the specific GA parameters from the parameters file
@@ -78,9 +78,9 @@ class Genetic_Algorithm_TSP(Evolutive_algorithm):
         return np.array([np.random.permutation(city_idxs) 
                         for _ in range(self.n_pop)])
 
-    def f_adapt(self, x):
+    def f_fit(self, x):
         """
-        Calculate the adaptation of an individual or an array of individuals 
+        Calculate the fitness value of an individual or an array of individuals 
         based on the total distance of the route that they represent.
         x: individual or matrix of individuals (1d or 2d)
         """
@@ -199,7 +199,7 @@ class Genetic_Algorithm_TSP(Evolutive_algorithm):
         prev_best_adapt=self.best_adapt
         prev_best=self.pop[self.best]
         self.pop=children
-        self.pop_fit = self.f_adapt(children)
+        self.pop_fit = self.f_fit(children)
         self.best_adapt = np.min(self.pop_fit)
         self.best = np.argmin(self.pop_fit)
         # If we apply elitism and the best individual of the previous generation
@@ -214,5 +214,5 @@ class Genetic_Algorithm_TSP(Evolutive_algorithm):
 
 if __name__=="__main__":
     instance="/root/PYTHON/Comput_Evol/A1_Genetic_algorithm/instances/simple.tsp"
-    a=Genetic_Algorithm_TSP(name="Test", instance_file=instance)
+    a=Genetic_Algorithm_TSP(name="Test", instance=instance)
     a.run()

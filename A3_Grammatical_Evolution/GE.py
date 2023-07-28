@@ -14,14 +14,17 @@ import aux
 from kernel import KG,KP,KS
 class GrammaticalEvolution(Evolutive_algorithm):
     """
-    Class that represents the Grammatical Evolution algorithm to solve a linear regression problem.
-    The goal is to approximate a function f, given pairs of points (x_j, f(x_j)), using a combination
+    Class that represents the Grammatical Evolution algorithm to solve a linear
+    regression problem.
+    The goal is to approximate a function f, given pairs of points (x_j, f(x_j)), 
+    using a combination
     of Gaussian, Polynomial and Sigmoid kernels.
     """
 
     def __init__(self, name, function, parameters_file=None, rules_file=None):
         """
-        Initializes the Grammatical Evolution instance with the given filename to load the parameters.
+        Initializes the Grammatical Evolution instance with the given filename 
+        to load the parameters.
         """        
         #self.data = self.load_data(data_file)
         parameters = aux.load_parameters(parameters_file)
@@ -73,7 +76,7 @@ class GrammaticalEvolution(Evolutive_algorithm):
                                                          size=(n_kernels*15))
    
 
-    def f_adapt(self, x):
+    def f_fitfind_new(self, x):
         i, = np.where(self.pop == x)
         # The decoded function evaluated in the
         f_hat=self.pop_decoded[i]
