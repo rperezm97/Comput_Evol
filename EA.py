@@ -4,6 +4,7 @@ import time
 import matplotlib.pyplot as plt
 from multiprocessing import Pool, cpu_count
 import os
+from tqdm import tqdm
 
 class Evolutive_algorithm(ABC):
     """Abstract class that implements the methods of a generic evolutionary
@@ -15,11 +16,12 @@ class Evolutive_algorithm(ABC):
         self.name = name
         self.pop = self.init_pop()
         self.pop_fit = self.f_fit(self.pop)
-        self.best_adapt = np.min(self.pop_fit)
-        self.best = np.argmin(self.pop_fit)
-        self.optimal=None
-        self.parameters= None
         
+        self.best = np.argmin(self.pop_fit) 
+        self.best_adapt = self.pop_fit[self.best]
+        self.optimal = None
+        self.parameters = None
+
     def init_pop(self):
         """Initialize the population. To be implemented by child classes."""
         pass
@@ -34,15 +36,18 @@ class Evolutive_algorithm(ABC):
         the indices of the parents. To be implemented by child 
         classes."""
         pass
-    
+
     def match_parents(self, parents_idx):
         """Match the selected parents for crossover. It should return a list 
         with tuples of indices of the matched parents. 
         To be implemented by child classes."""
-    def variation_operators(self,parent_match):
-        children=self.crossover(self.pop[parent_match])
-        return [self.mutate(child) for child in children] 
-    
+
+    def variation_operators(self, parents):
+        """Perform crossover and mutation on two parents to create two children. To be
+        implemented by child classes."""
+        pass
+
+
     def crossover(self, parent):
         """Perform crossover on two parents to create two children. To be
         implemented by child classes."""
@@ -57,34 +62,17 @@ class Evolutive_algorithm(ABC):
         """Select the individuals to be included in the next generation.
         To be implemented by child classes."""
         pass
-    
-    
+
     def reproduce(self):
         """Perform reproduction for 1 generations."""
         # Select parents and create the matches by reshape the parent indices
         # array into a 3D array (for indexing the population matrix)
         parents_idx = self.parent_selection()
-        
+
         parent_matches = self.match_parents(parents_idx)
+        
+        children=self.variation_operators(self.pop[parent_matches])
 
-        
-        children = np.empty((self.n_children, self.pop.shape[1]),dtype=int)
-        
-        batch_size = int(len(parent_matches)*0.2)
-        try:
-        
-            for i in range(0, len(parent_matches), batch_size):
-                pool = Pool(processes=cpu_count())
-                batch = parent_matches[i:i+batch_size]
-                result=pool.map_async(self.variation_operators, batch).get()  # process data in batches
-                children[2*i:2*(i+batch_size)]=[child 
-                                for children_set in result
-                                for child in children_set]
-
-        finally:
-            pool.close()  # Close the pool
-            pool.join()   # Wait for all the worker processes to exit
-            
         # Update the population and best individual
         self.select_survivors(children)
 
@@ -96,7 +84,7 @@ class Evolutive_algorithm(ABC):
             ngen (int): The number of generations to run the algorithm for.
 
         Returns:
-            
+
             - bests (ndarray): an array with the best individual value at each 
             generation
             - means (ndarray): an array with the mean population value at each 
@@ -107,59 +95,51 @@ class Evolutive_algorithm(ABC):
         # Initialize some variables for tracking progress
         means = np.zeros(self.n_gen)
         bests = np.zeros(self.n_gen)
-        # Since it's computationally expensive, the standard deviations will 
-        # only be calculated for 50 equally spaced refence generations (at most; 
+        # Since it's computationally expensive, the standard deviations will
+        # only be calculated for 50 equally spaced refence generations (at most;
         # if the algorithm converges it will be less)
         SDs = np.zeros(50)
         csum_of_means = 0
         t = 0
         t1 = time.time()
         gen_success = 0
-        
-        #Initialize log
+
+        # Initialize log
         log_folder = './logs/'
         if not os.path.exists(log_folder):
             os.makedirs(log_folder)
-        log=open("logs/{}.txt".format( self.name), "w")
-        
+        log = open("logs/{}.txt".format(self.name), "w")
+
         # Print inicial
-        start_msg="{}\n".format(self.name) 
-        start_msg+="\nPARAMETERS={}".format(self.parameters)
-        start_msg+="Iniciating...\n\n"    
+        start_msg = "{}\n".format(self.name)
+        start_msg += "\nPARAMETERS={}\n".format(self.parameters)
+        start_msg += "Running the algorithm for {} \
+                        generations:\n".format(self.n_gen)
         print(start_msg)
         log.write(start_msg)
-        
-        for it in range(self.n_gen):
-            # Update the progress counter
-            progress = "Gen {}/{}".format(it, self.n_gen)
 
+        for it in tqdm(range(self.n_gen)):
             # Reproduce and mutate the population
             self.reproduce()
 
             # Calculate the mean and best adaptation of the population
-            
+
             mean = np.sum(self.pop_fit) / self.n_pop
             means[it] = mean
             bests[it] = self.best_adapt
 
             # Add the current mean to the cumulative sum
             csum_of_means += mean
-
-            # Clear the current line to make space for the progress update
-            clear_line = "\r" + " " * len(progress) + "\r"
-
-            # Update the progress counter
-            print(progress, end=clear_line, flush=True)
-
+            
             # Check for convergence every 50 generations
-            if it % (self.n_gen//50) == 0:
+            if not it % (self.n_gen//50) and it > 0:
                 # Calculate the sample DE of the means
                 SDs[t] = np.sqrt(np.sum(
                     (means[:it+1] - csum_of_means/(it+1))**2) / it
                 )
 
                 # Update the progress counter
-                progress = "{}: gen {}:\n".format(self.name, it)
+                progress = "\n {}: gen {}:\n".format(self.name, it)
                 progress += "Best = {} Mean = {} STD = {}".format(
                     bests[it], means[it], SDs[t])
                 progress += "\n"
@@ -174,10 +154,10 @@ class Evolutive_algorithm(ABC):
             # hasn't improved (thus we have reached a plateau in exploration)
             # and the standard deviations hasn't changed (thus, the algorithm
             # has exploited that solution and t,e best individual has taken
-            # over most of the population). 
-            if it>=500  \
-               and abs(bests[it]-bests[it-100]) < 0.001 \
-               and (SDs[t]-SDs[t-1]) < 0:
+            # over most of the population).
+            if (0 and
+            abs(bests[it]-bests[it-100]) < 0.001 \
+               and (SDs[t]-SDs[t-1]) < 0):
 
                 gen_success = it
                 # Measure the time to convergence
@@ -186,34 +166,35 @@ class Evolutive_algorithm(ABC):
 
                 # Print the final results
                 success_msg = "{}: Convergence reached in {:.2f} seconds, after\
-                            {} generations.\n".format(self.name, t_conver, 
+                            {} generations.\n".format(self.name, t_conver,
                                                       self.n_gen)
-    
+
                 success_msg += "Fitness of the best individual: \
-                            {},{}".format(self.best_adapt,bests[it])
+                            {},{}".format(self.best_adapt, bests[it])
                 print(success_msg, flush=True)
                 log.write(success_msg + "\n")
-                break
-        
-        # Set the best and mean values of the generations after convergence as 
-        # the value of convergence, for the plots                 
-        bests[it:]= bests[it]
-        means[it:] =means[it]
+                if 0:
+                    break
+
+        # Set the best and mean values of the generations after convergence as
+        # the value of convergence, for the plots
+        bests[it:] = bests[it]
+        means[it:] = means[it]
         # When the loop finishes, check if the convergence has not been reached
         if not gen_success:
             t2 = time.time()
             t_conver = t2 - t1
             # Print the final results
             success_msg = "{}: Convergence not reached in {:.2f} seconds, after\
-                           {} generations.\n".format(self.name, t_conver, 
+                           {} generations.\n".format(self.name, t_conver,
                                                      self.n_gen)
             success_msg += "Fitness of the best individual: \
                             {}".format(self.best_adapt)
             print(success_msg, flush=True)
-        
-        #Close log
+
+        # Close log
         log.close()
-        
+
         # Plot the progress graph
 
         self.plot_convergence(gen_success, bests, means, SDs)
@@ -255,17 +236,18 @@ class Evolutive_algorithm(ABC):
 
         # Plot:
         # The mean
-          # The mean
+        # The mean
         plt.plot(x, means, linewidth=0.3, color="orange", label='Mean')
         # The standard deviation at the reference points
         plt.errorbar(x[idx], means[idx], yerr=SDs, color='Black',
-                    elinewidth=.6, capthick=.8, capsize=.8, alpha=0.5,
-                    fmt='o', markersize=.7, linewidth=.7)
+                     elinewidth=.6, capthick=.8, capsize=.8, alpha=0.5,
+                     fmt='o', markersize=.7, linewidth=.7)
         # The value of the best individual and the known optimal value
         plt.plot(x, bests[:ngen], "--", linewidth=0.8,
-                color="blue", label='Best')
+                 color="blue", label='Best')
         if self.optimal:
-            plt.plot(x, self.optimal*np.ones(ngen), label="Optimal", color="green")
+            plt.plot(x, self.optimal*np.ones(ngen),
+                     label="Optimal", color="green")
         # The convergence generation on the best individual curve
         plt.scatter(gen_success, bests[gen_success],
                     color="red", label='Convergence', zorder=1)
@@ -278,9 +260,9 @@ class Evolutive_algorithm(ABC):
         plt.ylabel('Adaptation value')
 
         plt.title('{} '.format(self.name))
-        
+
         # Show the plot
-        #plt.show()
-        
+        # plt.show()
+
         # Save the figure in the plots folder and show it
         plt.savefig('plots/{}.png'.format(self.name))

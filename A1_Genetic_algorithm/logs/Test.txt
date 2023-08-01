@@ -1,0 +1,4 @@
+Test
+
+PARAMETERS={'ngen': 1000, 'npop': 5, 'ps': 1, 't_size': 2, 'n_torneos': 10, 'pc': 1, 'pm': 1}Iniciating...
+
