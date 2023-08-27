@@ -1,5 +1,4 @@
 import time
-import os
 import numpy as np
 import matplotlib.pyplot as plt
 from multiprocessing import Pool, cpu_count
@@ -13,6 +12,7 @@ class Test:
         EA (Evolutive_algorithm): The evolutive algorithm object.
         n_exe (int): Number of executions for the test.
         """
+        
         self.model_population = EA
         self.n_exe = n_exe
 
@@ -76,6 +76,7 @@ class Test:
         Returns:
         tuple: mean, best, t_conver, gen_success values for the execution.
         """
+        np.random.seed(i)
         self.model_population.name = "execution {}, {}".format(i, self.model_population.name)
         self.model_population.pop = self.model_population.init_pop()
         self.model_population.pop_fit = self.model_population.f_adapt(self.model_population.pop)

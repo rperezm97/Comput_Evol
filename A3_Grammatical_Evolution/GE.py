@@ -1,15 +1,17 @@
 import numpy as np
-import random
-from scipy.sparse import lil_matrix
-import sys,os
-#Local imports
-current = os.path.dirname(os.path.realpath(__file__))
-parent = os.path.dirname(current)
-print(current)
-sys.path.append(current)
-sys.path.append(parent)
+import sys, os
+import json
+from scipy.stats.qmc import LatinHypercube
+from multiprocessing import Pool, cpu_count
 
+# Import additional modules and parent class
+A3_FOLDER = os.path.dirname(__file__)
+sys.path.append(A3_FOLDER)
+import aux as aux
+import funct
+sys.path.append( os.path.join(A3_FOLDER, ".."))
 from EA import Evolutive_algorithm
+
 import aux
 from kernel import KG,KP,KS
 class GrammaticalEvolution(Evolutive_algorithm):
@@ -21,75 +23,69 @@ class GrammaticalEvolution(Evolutive_algorithm):
     of Gaussian, Polynomial and Sigmoid kernels.
     """
 
-    def __init__(self, name, function, parameters_file=None, rules_file=None):
+    def __init__(self, instance_id, function, rules_file="rules.json"):
         """
         Initializes the Grammatical Evolution instance with the given filename 
         to load the parameters.
-        """        
-        #self.data = self.load_data(data_file)
-        parameters = aux.load_parameters(parameters_file)
-         # Number of generations
-        self.n_gen = parameters["n_gen"]
-        # number of individuals of the population
-        self.n_pop = parameters["n_pop"]
-        # Selection probability
-        self.ps = parameters["ps"]
-        # Tournament size
-        self.t_size = parameters["t_size"]
-        # Numebr of torunaments
-        self.n_tournaments = self.n_pop
-        # Cross probability
-        self.pc = parameters["pc"]
-        # Mutation probability
-        self.pm = parameters["pm"]
-        # Elitism ()
-        self.elitism=parameters["elitism"]
-        #
-        self.n_samples=parameters["n_samples"]
+        """      
+        print("\nInitializing the Gramatical Evolution algoritm for symboli regression \n-INSTANCE: {}\n".format(instance_id))
         
-        self.function=function
-        self.sample=aux.get_sample(self.function, 
-                                    self.n_samples)
-        #Set the generic EA parameters
-        self.n_children =self.n_pop
+        function_name = instance_id.split("_")[0]
+        self.function = getattr(funct, function_name)()
+        
+        super().__init__(instance_id, A3_FOLDER, None, convergence_thresholds=(0,0,1e-15))
+
+        
+        self.equidistant_sample= np.linspace(self.function.dom[0], 
+                                            self.function.dom[0], 
+                                            self.n_samples)
+
+        
+        super().__init__(instance_id, A2_FOLDER, 0, convergence_thresholds=(0,0,1e-15))
+
+       
         
         # Get
         self.BNF_rules = aux.load_rules(rules_file)
         
-        super().__init__(name) #Path(instance_file).stem
-        self.parameters=parameters
-        self.pop_decoded= [aux.decode(chromosome) 
-                           for chromosome in self.pop.data]
     def init_pop(self):
         """
-        Initialize the population sparse matrix with radnom integer vectors of 
-        random lenght.
+        Initializes the population for the Grammatical Evolution algorithm.
+
+        It creates:
+        - self.mask_codons: a 1D numpy array of length self.n_pop, containing the number of active codons for each individual.
+        - self.population: a 2D numpy array of shape (self.n_pop, 8 * self.max_codons), filled with random binary values, where inactive codons are set to 0.
         """
-        print("Initializing population...")
-    
-        self.pop = lil_matrix((self.n_pop, 15*self.max_kernels), dtype=np.int32)
 
+        # Initialize the mask_codons array with random number of active codons
+        self.mask_codons = np.random.randint(1, self.max_codons + 1, size=self.n_pop)
+
+        # Initialize the population array with random binary numbers (0 or 1)
+        self.pop = np.random.randint(0, 2, 
+                                     size=(self.n_pop, 8 * self.max_codons), 
+                                     dtype=np.uint8)
+
+        # Set the inactive codons to 0 based on the mask_codons array
         for i in range(self.n_pop):
-            # Initialize
-            n_kernels=random.randint(1,self.max_kernels//3)
-            self.pop[i,:n_kernels*15]= np.random.randint(1, 256, 
-                                                         size=(n_kernels*15))
-   
+            self.population[i, 8 * self.mask_codons[i]:] = 0
 
-    def f_fitfind_new(self, x):
-        i, = np.where(self.pop == x)
+    def f_fit(self, x):
         # The decoded function evaluated in the
-        f_hat=self.pop_decoded[i]
+        f_hat=aux.decode(x)
         
         # # Objective 1: Absolute mean ponderated error of the pairs 
         # (f_hat(x_j),f(x_j))
         f_error=abs(f_hat.f(self.sample_points)-self.f_sample_point)      
         omega = self.K0 if f_error <= self.U else self.K1
         f_error=(omega @ f_error)/self.m
-        # Objective 2: Penalty for the number of kernels
-        n_kernels=len(f_hat.kernels)
-        kernel_penalty=self.kernel_penalty_weight * n_kernels
-        return f_error + kernel_penalty
+        
+        if self.penalty_weight:
+            # Objective 2: Penalty for the number of kernels
+            n_kernels=len(f_hat.kernels)
+            kernel_penalty=self.kernel_penalty_weight * n_kernels
+            return f_error + kernel_penalty
+        else:
+            return f_error
     
     def parent_selection(self):
         """

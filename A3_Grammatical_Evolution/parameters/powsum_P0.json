@@ -1,0 +1,1 @@
+{"n_gen": 1200, "n_dims": 10, "n_pop": 30, "n_children": 200, "crossover_type": "discrete", "step_size": 1, "n_parents": 3, "tau": 1, "tau_prime": 0, "selection_type": ",", "eps_0": 0.001}

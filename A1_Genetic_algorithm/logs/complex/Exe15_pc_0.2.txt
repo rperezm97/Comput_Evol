@@ -1,5 +1,0 @@
-EJECUCIÓN 15
- INSTANCIA=complex 
-PARAMETROS={'ngen': 10000, 'npop': 100, 'ps': 1, 't_size': 2, 'n_torneos': 100, 'pc': 0.2, 'pm': 1} Iniciando...
-
-

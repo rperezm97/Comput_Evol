@@ -54,7 +54,7 @@ class KG(Kernel):
         self.lambd = lambd
         self.c = c
         self.kernels=[self.f]
-    def f(self, x):
+    def eval(self, x):
         return np.exp(-self.lambd * (self.c - x) ** 2)
 
 

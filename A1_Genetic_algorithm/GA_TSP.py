@@ -1,18 +1,15 @@
 
 import numpy as np
-import random
-import json
 import sys
 import os
+import json
 from multiprocessing import Pool, cpu_count
-from pathlib import Path
 # We need to import modules from the current
 # and parent directories.
-current = os.path.dirname(os.path.realpath(__file__))
-parent = os.path.dirname(current)
-sys.path.append(current)
-sys.path.append(parent)
+A1_FOLDER = os.path.dirname(__file__)
+sys.path.append(A1_FOLDER)
 import aux
+sys.path.append( os.path.join(A1_FOLDER, ".."))
 from EA import Evolutive_algorithm
 
 class Genetic_Algorithm_TSP(Evolutive_algorithm):
@@ -21,7 +18,7 @@ class Genetic_Algorithm_TSP(Evolutive_algorithm):
     Salesman Problem (TSP).
     """
 
-    def __init__(self, name, instance, parameters_file=None, known_optimal=None):
+    def __init__(self, instance_id, optimal=None):
         """
         Initialize the algorithm with the given parameters and cities in the 
         corresponding files.
@@ -36,21 +33,61 @@ class Genetic_Algorithm_TSP(Evolutive_algorithm):
         solution to the problem (int or tuple), if available.
         """
 
-        # The instance name will be the name of the isnatcne file without the
+        # The instance idnetifier is  of the isnatcne file without the
         # extension.
-
-        # Load the city coordinate matrix from the instance file
-        self.cities = aux.load_instance(instance)
+        print("\nInitializing the Genetic Algorithm for the TSP \n-INSTANCE: {}\n".format(instance_id))
+        
+        # Load the city coordinate matrix from the instance file   
+        tsp_instance=instance_id.split("_")[0]
+        tsp_instance_file= os.path.join(A1_FOLDER,
+                                       "instances/{}.tsp".format(tsp_instance))
+        if tsp_instance=="simple":
+            optimal=629
+        elif tsp_instance=="complex":
+            optimal=923368
+        
+        self.cities = aux.load_tsp_instance(tsp_instance_file)
         self.n_cities = len(self.cities)
         self.city_distances = aux.calculate_city_distances(self.cities)
+        #self.base_folder=os.path.dirname(__file__)
+        super().__init__(instance_id,A1_FOLDER, optimal)  # Path(instance_file).stem
+        
+        
+        self.pool=Pool(processes=cpu_count())
+
+
+    def init_parameters(self):
+        #The id can be INS_PC_EXE and the parameter isnatce is just INS_PC, thus
+        # we extract that
+        parameter_instance="_".join(self.instance_id.split("_")[:2])
+        parameters_file=os.path.join(A1_FOLDER,
+                                "parameters/{}.json".format(parameter_instance))
+
         # Load the specific GA parameters from the parameters file
-        parameters = aux.load_parameters(parameters_file)
+        try:
+            print("Loading parameters from file.")
+            with open(parameters_file) as fp:
+                parameters = json.load(fp)
+        except:
+            print("Invalid/empty parameter file.\nUsing default parameters.\n")
+            parameters = {}
+            parameters["n_gen"] = 100
+            parameters["n_pop"] = 10
+            parameters["ps"] = 1
+            parameters["t_size"] = 3
+            parameters["pc"] = 1
+            parameters["pm"] = 1
+            print("Saving default parameters as {}.".format(parameters_file) ,
+                   "Please modify the file adn re-run teh algorithm")
+            
+            with open(parameters_file, "w") as fp:
+                json.dump(parameters, fp)
+        
+        print("{}\n".format(parameters))
         # Number of generations
-        self.n_gen = parameters["ngen"]
+        self.n_gen = parameters["n_gen"]
         # number of individuals of the population
-        self.n_pop = parameters["npop"]
-        # Selection probability
-        self.ps = parameters["ps"]
+        self.n_pop = parameters["n_pop"]
         # Tournament size
         self.t_size = parameters["t_size"]
         # Numebr of torunaments
@@ -59,16 +96,9 @@ class Genetic_Algorithm_TSP(Evolutive_algorithm):
         self.pc = parameters["pc"]
         # Mutation probability
         self.pm = parameters["pm"]
-        # Elitism ()
-        self.elitism = 1
         # Set the generic EA parameters
         self.n_children = self.n_pop
-
-        super().__init__(name)  # Path(instance_file).stem
-        self.parameters = parameters
-        self.pool=Pool(processes=cpu_count())
-
-
+    
     def init_pop(self):
         """
         Initialize the population matrix with random permutations of the city 
@@ -79,7 +109,7 @@ class Genetic_Algorithm_TSP(Evolutive_algorithm):
         city_idxs = np.arange(1, self.n_cities, dtype=int)
         return np.array([np.random.permutation(city_idxs)
                         for _ in range(self.n_pop)])
-
+        
     def f_fit(self, x_0):
         """
         Calculate the fitness value of an individual or an array of individuals 
@@ -110,18 +140,11 @@ class Genetic_Algorithm_TSP(Evolutive_algorithm):
         """
         Select parents for the next generation using tournaments.
         """
-       
         
         parents_idx = [aux.tournament_selection(self.pop_fit, self.t_size)
                        for _ in range(self.n_tournaments)]
-                                            
-        return parents_idx
-
-    def match_parents(self, parents):
-        """ Match the parents 2 by 2 randomly and return a 3d array to index
-        """
-        # Since the parents are generated randomly,
-        return np.array(parents,dtype=int).reshape(-1, 2)
+        parent_matches=np.array(parents_idx,dtype=int).reshape(-1, 2)                                   
+        return parent_matches
 
     def select_survivors(self, children):
         """
@@ -139,7 +162,7 @@ class Genetic_Algorithm_TSP(Evolutive_algorithm):
         self.best_adapt = self.pop_fit[self.best]
         # If we apply elitism and the best individual of the previous generation
         # is better than the best individual of this generation
-        if self.elitism and self.best_adapt > prev_best_adapt:
+        if self.best_adapt > prev_best_adapt:
             # Subtitute the worst individual of this generation with the
             # best of the previous generation
             worst = np.argmax(self.pop_fit)
@@ -148,30 +171,29 @@ class Genetic_Algorithm_TSP(Evolutive_algorithm):
             self.best_adapt = prev_best_adapt
             self.best = worst
 
-    def variation_operators(self, parents):
+    def variation_operators(self, parent_matches):
         # Since the i-th parent will be selected with probability self.pc, 
         # instead of randomly egnerating one number every time we call the 
         # crossover function, we will make a mask to see which aprents will be 
         # selected. 
+        parents=self.pop[parent_matches]
         crossover_mask = np.random.uniform(0, 1, len(parents))<self.pc
         
         result_cross=self.pool.map_async(aux.pmx_crossover, 
                                     parents[crossover_mask]).get()  # process data in batches
-        
-        parents[crossover_mask]=result_cross
+        if result_cross:
+           parents[crossover_mask]=result_cross
         children=parents.reshape(-1,parents.shape[2])
         
         mutation_mask = np.random.uniform(0, 1, len(children))<self.pm
         result_mut=self.pool.map_async(aux.inter_mutation,
                                   children[mutation_mask]).get()
-        children[mutation_mask]=result_mut
+        if result_mut:
+            children[mutation_mask]=result_mut
 
         return children
     
 if __name__ == "__main__":
 
-    instance = r"C:\Users\berti\Mi_equipo\Documentos\Roberto\PROGRAMMING\PYTHON\Comput_Evol\A1_Genetic_algorithm\instances\complex.tsp"
-    parameters_file = r"C:\Users\berti\Mi_equipo\Documentos\Roberto\PROGRAMMING\PYTHON\Comput_Evol\A1_Genetic_algorithm\params\complex\pc_1.json"
-    a = Genetic_Algorithm_TSP(
-        name="Test", instance=instance, parameters_file=parameters_file)
+    a = Genetic_Algorithm_TSP("simple_05_test2")
     a.run()
