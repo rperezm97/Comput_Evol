@@ -3,52 +3,82 @@ from abc import ABC
 import time
 import matplotlib.pyplot as plt
 import os
+import json
 from tqdm import tqdm
 
 class Evolutive_algorithm(ABC):
     """Abstract class that implements the methods of a generic evolutionary
-    algorithm and serves as a parent for other algorithms."""
+    algorithm."""
 
-    def __init__(self, instance_id, base_folder=None, optimal=None,
-                 convergence_thresholds=(1e-5,.3,.1)):
-        """Initialize the population, calculate the adaptation of each
-        individual, and store the best individual and its adaptation."""
-        self.instance_id = instance_id
-        self.init_parameters()
-       
+    # ----------------INITIALIZATION OF VARIABLES AND PARAMETERS---------------
+    def __init__(self, 
+                 instance_id, 
+                 base_folder=None,
+                 convergence_threshold=1e-5,
+                 sucess_threshold=1e-2):
+        """Initialize the population and their fitness, the parameters and 
+        other relevant variabels for the algorithm."""
         
+        # Instance_id includes information about the insatcne and the run,
+        # In the format instanceName_runId. It's used for loading parameters, 
+        # logging, etc.
+        self.instance_id = instance_id
+        
+        # TODO: is there a better way to execute?
         self.base_folder=base_folder
         
+        # LOAD PARAMETERS:
+        self.init_parameters()
+       
+        # INITIALIZE POPULATION VARIABLES:
         self.pop = self.init_pop()
-        self.pop_fit = self.f_fit(self.pop)
+        self.pop_fitness = self.f_fitness(self.pop)
+        # Save the best individual with their adaptation value
+        self.best = np.argmin(self.pop_fitness) 
+        self.best_adapt = self.pop_fitness[self.best]
         
-        self.best = np.argmin(self.pop_fit) 
-        self.best_adapt = self.pop_fit[self.best]
-        self.optimal=optimal
+        # INITIALIZE THE CONVERGENCE/SUCESS THRESHOLD:
+        self.convergence_threshold=convergence_threshold
+        self.sucess_threshold=sucess_threshold
         
-        self.convergence_thresholds=convergence_thresholds
+    def init_parameters(self):
+        """Load parameters from the json file corresponding to the current 
+        instance of the problem"""
         
-        
+         # Parameters are stored in the "parameters" folder, in a json file named 
+         # after instanceName
+        instanceName="_".join(self.instance_id.split("_")[:2])
+        parameters_file=os.path.join(self.base_folder,
+                                     f"parameters/{instanceName}.json")
+        # Laod the parameters dictinary and hold it as an attribute of the class  
+        with open(parameters_file) as f:
+            parameters = json.load(f)
+        # Use the keys in the parameter dict to define variables with the same 
+        # name (for example, self.n_pop = self.parameters["n_pop"])    
+        for key, value in parameters.items():
+            setattr(self, key, value)
+        print(parameters)
+    
+    # --------------------ABTRACT METHODS OF A GENERIC EA-----------------------
     def init_pop(self):
         """Initialize the population. To be implemented by child classes."""
         pass
     
-    def init_parameters(self):
-        pass 
-    
-    def f_fit(self, pop):
-        """Calculate the fitness value of each individual in the population.
+    def f_fitness(self):
+        """Calculate the fitness value of one or more individual. It
+        should work with np.arrays or list of individuals.
         To be implemented by child classes."""
         pass
 
     def parent_selection(self):
         """Select parents from the population. It should return a list with
-        the indices of the parents. To be implemented by child 
-        classes."""
+        the indices of the matched parents, ready for variation operators.
+        To be implemented by child classes."""
         pass
 
     def variation_operators(self, parents):
-        """Perform crossover and mutation on two parents to create two children. To be
+        """Perform the variation operators (crossover and mutation, but could 
+        be others) on two parents to create two children. To be
         implemented by child classes."""
         pass
 
@@ -56,207 +86,174 @@ class Evolutive_algorithm(ABC):
         """Select the individuals to be included in the next generation.
         To be implemented by child classes."""
         pass
-
+    
+    # -------------------------- MAIN EXECUTION CYCLE -------------------------- 
+    # def convergence_condition(self,checkgen_i,bests, SDs):
+    #     # We calculate the slope of teh curve, doin the discrete derivative
+    #     # (implicitly, usinh h=check_step)
+    #     gen=checkgen_i*self.n_gen//100
+    #     change_rate=(bests[gen-1] - bests[gen])/(bests[gen-1])
+    #     exploration_condition = change_rate<1e-5
         
-    def convergence_condition(self,it, bests, SDs, means):
+    #     explotation_condition = SDs[checkgen_i] < 0.1*SDs[0]
         
-        change_threshold,sd_threshold,optimal_threshold=self.convergence_thresholds
+    #     print("Rate of best_change:{}\n".format(
+    #           change_rate))
+    #     return exploration_condition and explotation_condition
         
-        l_interval = self.n_gen // 100
-        t = it // l_interval
-        
-        sd_rate=(SDs[t] / (np.mean(SDs[:t])))
-        change_rate=((bests[it-l_interval] - bests[it])/(bests[it-l_interval]))
-        condition_diversity=(change_rate< change_threshold 
-                            and sd_rate< sd_threshold)
-        
-        print("Rate of best_change:{}\nRate of SD change:{}\n".format(
-              change_rate,sd_rate))
-        
+    def check_success(self,checkgen_i, bests):
         
         if not (self.optimal is None):
-            if self.optimal!=0:
-                percentage_optimal = (bests[it] / self.optimal)-1
-            else: 
-                percentage_optimal=np.abs(bests[it]) 
-            condition_optimal = percentage_optimal < optimal_threshold        
+            distance_optimal = np.abs(bests[checkgen_i] - self.optimal)-1
+            condition_optimal = distance_optimal < self.optimal_threshold        
 
-            print("Distance from bests towards know optimal: {}%".format(int(percentage_optimal*100)))
-            return condition_optimal or condition_diversity
-        else:
-            return condition_diversity
-   
-    def check_success(self,bests,gen_convergence,t_converg):
-        return gen_convergence>0
+            print("Distance from bests towards know optimal: {}%".format(
+                int(distance_optimal*100)))
+            return condition_optimal 
+        #return gen_convergence>0
     
-    def reproduce(self):
-        """Perform reproduction for 1 generations."""
-        # Select parents and create the matches by reshape the parent indices
-        # array into a 3D array (for indexing the population matrix)
-        parent_matches = self.parent_selection()
-
-        
-        children=self.variation_operators(parent_matches)
-
-        # Update the population and best individual
-        self.select_survivors(children)
-        
-    def run(self, stop_after_convergence=True):
+    def run(self, early_stop=True):
         """
-        Runs the evolutionary algorithm for ngen generations.
-
-        Args:
-            ngen (int): The number of generations to run the algorithm for.
-
-        Returns:
-
-            - bests (ndarray): an array with the best individual value at each 
-            generation
-            - means (ndarray): an array with the mean population value at each 
-            generation
-            - SDs (ndarray): an array with the standard deviation at each of 100 
-            reference generations
+        Runs the evolutionary algorithm for ngen generations. In every iteration,
+        it reproduces the population. Every ngen/100 iterations, it chekcs 
+        convergence. If early_stop=True, it will stop when the convergence 
+        condition has been archieved.
+        
+        Retuns the best and mean fitness values, with the standard deviation,
+        of the 100 check generations (if early_stop=True, the values after 
+        convergence will be the same as the one at the moment of convergence).
         """
-        # Initialize some variables for tracking progress
+        
+        # INITIALIZE VARIABLES:
+        
+        # Output variables
         means = np.zeros(self.n_gen)
         bests = np.zeros(self.n_gen)
-        # Since it's computationally expensive, the standard deviations will
-        # only be calculated for 100 equally spaced refence generations (at most;
-        # if the algorithm converges it will be less)
         SDs = np.zeros(100)
+        # Log 
+        log_file=os.path.join(self.base_folder,
+                                f"logs/{self.instance_id}.txt")
+        log = open(log_file,"w")
+        # Convergence genration and time at the start of execution
+        gen_conver=None
         t0 = time.time()
-        gen_conver = 0
 
-        # Initialize log
-        log_folder=os.path.join(self.base_folder,"logs")
-        if not os.path.exists(log_folder):
-            os.makedirs(self.log_folder)
-        log_file_name="{}.txt".format(self.instance_id)
-        log = open(os.path.join(log_folder,log_file_name),
-                   "w")
-
-        # Print inicial
-        start_msg ="Running {} for {} generations:\n".format(self.instance_id,self.n_gen)
-        print(start_msg)
-
-        for it in tqdm(range(self.n_gen)):
-            # Reproduce and mutate the population
-            self.reproduce()
-
-            # Calculate the mean and best adaptation of the population
-
-            mean = np.sum(self.pop_fit) / self.n_pop
-            means[it] = mean
-            bests[it] = self.best_adapt
+        # Check_step is the number of generations between convergence checkings.
+        # It comes from dividing range(n_gen) in 100 equally spaced parts.
+        check_step=(self.n_gen//100)
+        
+        print(f"Running {self.instance_id} for {self.n_gen} generations:\n")
+        
+        # MAIN EXECUTION CYCLE: 
+        for gen in tqdm(range(self.n_gen)):
+            # Select parents and apply the variation operators
+            parent_matches = self.parent_selection()
+            children=self.variation_operators(parent_matches)
+            # Select survivors and update the population variables (in place)
+            self.select_survivors(children)
             
-            # Check for convergence every 100 generations
-            if not it % (self.n_gen//100):
-                t=it//(self.n_gen//100)
-                # Calculate the sample DE of the means
-                SDs[t] = np.sqrt(np.sum(
-                    (self.pop_fit - mean)**2) /  (self.n_pop-1)
-                )
-
-                # Update the progress counter
-                progress = "\nGen {}:\n".format(it)
-                progress += "Best = {} \nMean = {} \nSTD = {}\n ".format(
-                    bests[it], means[it], SDs[t])
-                progress += "\n"
-
-                # Print the progress update and write to the log file
-                print(progress, end="", flush=True)
-                log.write(" ".join(map(str,
-                                   [it,bests[it], means[it], SDs[t], "\n"])))
+            # Store best fitness value and the the empirical mean over 
+            # the population  
+            bests[gen] = self.best_adapt
+            means[gen] = np.sum(self.pop_fitness) / self.n_pop
+            
+            # If gen is a multiple of the check_step, we check convergence
+            if not (gen % check_step):
+                #Get the index of the current checking generation (from 1 to 100)
+                checkgen_i=gen//check_step
+                
+                # Calculate and store standard deviation (pseudovariance) of the
+                # population fitness, aswell as the best value
+                SDs[checkgen_i] = np.sqrt( np.sum ( ( self.pop_fitness 
+                                                    - means[gen] )**2 )
+                                         / ( self.n_pop - 1 ) )
+                
+                # Print the progress update and write the info to the log file
+                print( (f"""  \n Gen {gen} :
+                            \n Best = {bests[gen]} 
+                            \n Mean = {means[gen]} 
+                            \n STD = {SDs[checkgen_i]} 
+                            \n \n """) ,
+                      end="", flush=True)
+                log.write(" ".join(map(str,[gen, 
+                                            bests[gen], 
+                                            means[gen], 
+                                            SDs[checkgen_i], 
+                                            "\n"])))
 
                 # Check for convergence: in 100 generations, the best individual
                 # hasn't improved (thus we have reached a plateau in exploration)
                 # and the standard deviations hasn't changed (thus, the algorithm
                 # has exploited that solution and t,e best individual has taken
                 # over most of the population).
-                if (t>0 and 
-                    self.convergence_condition(it,
-                                               bests=bests,
-                                               SDs=SDs,
-                                               means=means)
-                    and not gen_conver):
+                # if (checkgen_i>0 and 
+                #     self.convergence_condition(checkgen_i,
+                #                                bests=bests, 
+                #                                SDs=SDs)
+                #     and not gen_conver):
 
-                    gen_conver = it
-                    # Measure the time to convergence
-                    t1 = time.time()
-                    t_conver = t1 - t0
-
-                    # Print the final results
-                    success_msg = "\n Convergence reached in {} seconds, after {} generations.\n".format(t_conver,
-                                                        gen_conver)
-
-                    success_msg += "Fitness of the best individual: {}".format(self.best_adapt)
-                    print(success_msg, flush=True)
-                    if stop_after_convergence:
-                        break
-
+                #     gen_conver = gen
+                #     if early_stop:
+                #         break
+        
+        # SAVING VALUES AND PLOTTING
+        
+        # Check the time of running
+        t1 = time.time()
+        t_conver = t1 - t0
         # Set the best and mean values of the generations after convergence as
         # the value of convergence, for the plots
-        bests[it:] = bests[it]
-        means[it:] = means[it]
-        # When the loop finishes, check if the convergence has not been reached
-        if not gen_conver:
-            t1 = time.time()
-            t_conver = t1 - t0
-            gen_converg=0
-            # Print the final results
-            success_msg = "{} - Convergence not reached in {:.2f} seconds, after {} generations.\n".format(self.instance_id, t_conver,
-                                                     self.n_gen)
-            success_msg += "Fitness of the best individual: {}".format(self.best_adapt)
-            print(success_msg, flush=True)
-
+        bests[gen:] = bests[gen]
+        means[gen:] = means[gen]
+        
+        # Print the final results, formatting it accordingly to convergence 
+        # being reached or not
+        print(("\n Convergence"+
+                   "was" if gen_conver else "wasn't"+ 
+                f"""  reached in {t_conver} seconds, 
+                    after {gen_conver or self.n_gen} 
+                    generations.  
+                    \n Fitness of the best individual: {self.best_adapt}"""), 
+                flush=True)
+        # Write the convergence info in the log
         log.write(" ".join(map(str,
                            [gen_conver, 
                             t_conver,
                             "\n"])))
-        log.write(str(self.pop[self.best]))
         # Close log
         log.close()
 
+        # Save the genome of the best individual, if save_best
+        #TODO: log.write(str(self.pop[self.best]))
+        
         # Plot the progress graph
-
         self.plot_convergence(gen_conver, bests, means, SDs)
 
-        # Todo: save best individual in a file
-
-        return means, bests, t_conver, gen_conver
+        return self.pop[self.best], self.best_adapt, t_conver, gen_conver
     
     
-    def plot_convergence(self, gen_converg, bests, means, SDs):
+    def plot_convergence(self, gen_converg, bests, means, SDs, visualize=False):
         """
-        Plots a graph showing the progress of the algorithm, with the value of 
-        the best individual, the mean of the population, and the standard 
-        deviation.
+        Plots the progress curve of the evolutive algorithm, including with the 
+        value of  the best individual, the mean of the population, and the standard 
+        deviation per generation.
         Also shows the point where the convergence condition is met (if it 
         doesn't converge, this point will be at zero).
-
-        Args:
-        - ngen (int): number of max generations where the algorithm can run
-        - gen_conver (int): the generation number where convergence is achieved 
-        (if any)
-        - bests (ndarray): an array with the best individual value at each 
-        generation
-        - means (ndarray): an array with the mean population value at each 
-        generation
-        - SDs (ndarray): an array with the standard deviation at each of the 
-        100 reference points
-
-        Returns:
-        - None
-
         """
-        n_gen_exe= gen_converg if gen_converg>0 else self.n_gen
+        
+        
+        n_gen_exe= gen_converg or self.n_gen
         generations = np.arange(n_gen_exe)
         # Create a list with the indices of the 100 reference generations
         ref_generations = [i for i in range(n_gen_exe) if not i % (self.n_gen//100)]
         # Create the figure
         plt.figure(figsize=(8, 6), dpi=200)
         plt.xlim(0,n_gen_exe)
-        plt.ylim(self.optimal-0.05*max(bests),1.05*max(bests))
+        if self.optimal:
+            minimum=self.optimal
+        else:
+            minimum=min(bests)
+        plt.ylim(minimum-0.05*max(bests),1.05*max(bests))
 
         # Plot:
         # The mean
@@ -292,11 +289,11 @@ class Evolutive_algorithm(ABC):
                      label="Optimal", 
                      color="green")
         # The convergence generation on the best individual curve
-        plt.scatter(gen_converg,
-                   bests[gen_converg],
-                    color="red",
-                    label='Convergence', 
-                    zorder=1)
+        # plt.scatter(gen_converg,
+        #            bests[gen_converg],
+        #             color="red",
+        #             label='Convergence', 
+        #             zorder=1)
 
         # Add the grid, legend and labels
         
@@ -312,9 +309,10 @@ class Evolutive_algorithm(ABC):
         # Create the axis
         plt.grid(True)
         
-        # Show the plot
-        plt.show()
-
         # Save the figure in the plots folder and show it
         plt.savefig(os.path.join(self.base_folder,
                             'plots/{}.png'.format(self.instance_id)))
+        
+        # Show the plot
+        if visualize:
+            plt.show()
