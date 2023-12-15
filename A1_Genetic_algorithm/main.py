@@ -6,7 +6,7 @@ A1_FOLDER = os.path.dirname(__file__)
 sys.path.append(A1_FOLDER)
 from GA import Genetic_Algorithm
 sys.path.append( os.path.join(A1_FOLDER, ".."))
-from test_EA import Test
+from experiments import Experiment
 
 def main():
     # print("Starting the application")
@@ -22,15 +22,14 @@ def main():
     instance="Schwefel"
     for pm in ["B3", "G3",
                "G1", "B1", 
-               "B2", "G2",
-               
+               "B2", "G2",           
                ]:
         instance_id = f"{instance}_{pm}"
         #print(f"Initial execution case: {instance}, pc={int(pc)/10}")
         #name="GA_pc_{}".format(pc)
         model_GA=Genetic_Algorithm(instance_id)
-        t = Test(model_GA, n_exe=6, initial_exe= 0)
-        t.run_test()
+        t = Experiment(model_GA, n_exe=6, initial_exe= 0)
+        t.run_experiment()
     # print("Analyze the convergence plots in the 'plots' folder and decide "
     #       "if the number of generations is appropriate, too large, or too small")
 
@@ -43,7 +42,7 @@ def main():
     #     results.append(experiment[pc].execute(ngen))
     #     time.sleep(0.5)
 
-    # Test.plot_comparison(instance, experiment, ngen)
+    # Experiment.plot_comparison(instance, experiment, ngen)
 
 
 if __name__ == "__main__":

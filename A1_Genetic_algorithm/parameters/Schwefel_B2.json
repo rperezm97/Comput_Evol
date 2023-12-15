@@ -1,0 +1,1 @@
+{"n_gen": 200000, "n_pop": 100, "n_bits_per_dim": 16, "n_dimensions": 100, "pc": 0.2, "pm": 0.000315625, "sel_pressure": 1.5, "encoding_type": "bin"}
